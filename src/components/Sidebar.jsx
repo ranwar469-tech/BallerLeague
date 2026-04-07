@@ -39,7 +39,7 @@ export function Sidebar() {
   );
 }
 
-function NavItem({ icon, label, to }: { icon: React.ReactNode; label: string; to: string }) {
+function NavItem({ icon, label, to }) {
   return (
     <NavLink 
       to={to} 

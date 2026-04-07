@@ -12,14 +12,9 @@ import {
   Search
 } from 'lucide-react';
 
-// Types
-interface League { id: number; name: string; country: string; logo: string; }
-interface Season { id: number; league_id: number; name: string; start_date: string; end_date: string; league_name?: string; }
-interface Team { id: number; name: string; stadium: string; city: string; logo: string; }
-interface Player { id: number; name: string; position: string; number: number; nationality: string; avatar: string; }
 
 export function Settings() {
-  const [activeTab, setActiveTab] = useState<'leagues' | 'seasons' | 'teams' | 'players'>('leagues');
+  const [activeTab, setActiveTab] = useState('leagues');
 
   return (
     <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-slate-950">
@@ -75,7 +70,7 @@ export function Settings() {
   );
 }
 
-function NavButton({ active, onClick, icon, label }: any) {
+function NavButton({ active, onClick, icon, label }) {
   return (
     <button
       onClick={onClick}
@@ -95,14 +90,14 @@ function NavButton({ active, onClick, icon, label }: any) {
 // --- Managers ---
 
 function LeaguesManager() {
-  const [leagues, setLeagues] = useState<League[]>([]);
+  const [leagues, setLeagues] = useState([]);
   const [formData, setFormData] = useState({ name: '', country: '', logo: '' });
 
   useEffect(() => {
     fetch('/api/leagues').then(res => res.json()).then(setLeagues);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const res = await fetch('/api/leagues', {
       method: 'POST',
@@ -167,8 +162,8 @@ function LeaguesManager() {
 }
 
 function SeasonsManager() {
-  const [seasons, setSeasons] = useState<Season[]>([]);
-  const [leagues, setLeagues] = useState<League[]>([]);
+  const [seasons, setSeasons] = useState([]);
+  const [leagues, setLeagues] = useState([]);
   const [formData, setFormData] = useState({ league_id: '', name: '', start_date: '', end_date: '' });
 
   useEffect(() => {
@@ -176,7 +171,7 @@ function SeasonsManager() {
     fetch('/api/leagues').then(res => res.json()).then(setLeagues);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const res = await fetch('/api/seasons', {
       method: 'POST',
@@ -254,8 +249,8 @@ function SeasonsManager() {
 }
 
 function TeamsManager() {
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [teams, setTeams] = useState([]);
+  const [seasons, setSeasons] = useState([]);
   const [formData, setFormData] = useState({ name: '', stadium: '', city: '' });
   const [assignData, setAssignData] = useState({ team_id: '', season_id: '' });
 
@@ -264,7 +259,7 @@ function TeamsManager() {
     fetch('/api/seasons').then(res => res.json()).then(setSeasons);
   }, []);
 
-  const handleCreateTeam = async (e: React.FormEvent) => {
+  const handleCreateTeam = async (e) => {
     e.preventDefault();
     const res = await fetch('/api/teams', {
       method: 'POST',
@@ -276,7 +271,7 @@ function TeamsManager() {
     setFormData({ name: '', stadium: '', city: '' });
   };
 
-  const handleAssignTeam = async (e: React.FormEvent) => {
+  const handleAssignTeam = async (e) => {
     e.preventDefault();
     if (!assignData.season_id || !assignData.team_id) return;
     
@@ -373,9 +368,9 @@ function TeamsManager() {
 }
 
 function PlayersManager() {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [players, setPlayers] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [seasons, setSeasons] = useState([]);
   const [formData, setFormData] = useState({ name: '', position: '', number: '', nationality: '' });
   const [assignData, setAssignData] = useState({ player_id: '', team_id: '', season_id: '' });
 
@@ -385,7 +380,7 @@ function PlayersManager() {
     fetch('/api/seasons').then(res => res.json()).then(setSeasons);
   }, []);
 
-  const handleCreatePlayer = async (e: React.FormEvent) => {
+  const handleCreatePlayer = async (e) => {
     e.preventDefault();
     const res = await fetch('/api/players', {
       method: 'POST',
@@ -397,7 +392,7 @@ function PlayersManager() {
     setFormData({ name: '', position: '', number: '', nationality: '' });
   };
 
-  const handleAssignPlayer = async (e: React.FormEvent) => {
+  const handleAssignPlayer = async (e) => {
     e.preventDefault();
     if (!assignData.team_id || !assignData.player_id || !assignData.season_id) return;
     
@@ -513,3 +508,4 @@ function PlayersManager() {
     </div>
   );
 }
+

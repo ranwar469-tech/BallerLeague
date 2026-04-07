@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { BarChart3, Shield, Save } from 'lucide-react';
 
 export function MatchEntryCard() {
-  const [homeScore, setHomeScore] = useState<string>('0');
-  const [awayScore, setAwayScore] = useState<string>('0');
+  const [homeScore, setHomeScore] = useState('0');
+  const [awayScore, setAwayScore] = useState('0');
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">

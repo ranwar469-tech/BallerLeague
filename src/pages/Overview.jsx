@@ -211,7 +211,7 @@ export function Overview() {
   );
 }
 
-function StatCard({ title, value, icon, trend, trendUp, label }: any) {
+function StatCard({ title, value, icon, trend, trendUp, label }) {
   return (
     <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
       <div className="flex justify-between items-start mb-4">

@@ -1,29 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { MapPin, Users, Trophy, Star } from 'lucide-react';
 
-interface Team {
-  id: number;
-  name: string;
-  stadium: string;
-  city: string;
-  logo: string;
-  // Mock data for now for missing fields
-  capacity?: string;
-  manager?: string;
-  founded?: string;
-  colors?: string[];
-  rating?: number;
-}
-
 export function Teams() {
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [teams, setTeams] = useState([]);
 
   useEffect(() => {
     fetch('/api/teams')
       .then(res => res.json())
       .then(data => {
         // Enhance with mock data for visual consistency until DB has these fields
-        const enhancedTeams = data.map((t: Team) => ({
+        const enhancedTeams = data.map((t) => ({
           ...t,
           capacity: '50,000',
           manager: 'Unknown',
@@ -53,7 +39,6 @@ export function Teams() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {teams.map((team) => (
-            // @ts-ignore
             <TeamCard key={team.id} team={team} />
           ))}
         </div>
@@ -62,7 +47,7 @@ export function Teams() {
   );
 }
 
-const TeamCard = ({ team }: { team: any }) => {
+const TeamCard = ({ team }) => {
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-shadow group">
       <div className="h-24 bg-slate-100 dark:bg-slate-800 relative">
@@ -75,7 +60,7 @@ const TeamCard = ({ team }: { team: any }) => {
           </div>
         </div>
         <div className="absolute top-3 right-3 flex gap-1">
-          {team.colors.map((color: string, i: number) => (
+          {team.colors.map((color, i) => (
             <div key={i} className={`size-3 rounded-full ${color} ring-1 ring-slate-900/5`}></div>
           ))}
         </div>

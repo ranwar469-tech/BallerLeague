@@ -1,20 +1,70 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# BallerLeague (JavaScript Monorepo Style)
 
-# Run and deploy your AI Studio app
+React + Express application using JavaScript only, Tailwind CSS v4, React Router, and express-validator.
 
-This contains everything you need to run your app locally.
+## Stack
 
-View your app in AI Studio: https://ai.studio/apps/accc162a-e10c-47ca-931d-73d49d0b8ba0
+- Frontend: React, Vite, Tailwind CSS v4, React Router
+- Backend: Express, express-validator
+- Database (planned): MongoDB Atlas via Mongoose
+
+## Project Structure
+
+```
+src/
+   components/
+   pages/
+   App.jsx
+   main.jsx
+server/
+   src/
+      app.js
+      server.js
+      config/
+         mongodb.js
+      data/
+         store.js
+      middleware/
+         validate.js
+      routes/
+         api.routes.js
+      validators/
+         *.validators.js
+```
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+```
+PORT=5000
+MONGODB_URI=
+```
+
+`MONGODB_URI` is optional for now. If provided, the app attempts to connect to MongoDB Atlas.
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+1. Install dependencies
 
+```bash
+npm install
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. Start frontend + backend together
+
+```bash
+npm run dev
+```
+
+3. Build frontend
+
+```bash
+npm run build
+```
+
+4. Run backend only
+
+```bash
+npm run start
+```

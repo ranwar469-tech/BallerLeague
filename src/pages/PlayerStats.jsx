@@ -1,30 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface Player {
-  id: number;
-  name: string;
-  position: string;
-  number: number;
-  nationality: string;
-  avatar: string;
-  // Mock data for missing fields
-  team?: string;
-  apps?: number;
-  goals?: number;
-  assists?: number;
-  rating?: number;
-}
-
 export function PlayerStats() {
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState([]);
 
   useEffect(() => {
     fetch('/api/players')
       .then(res => res.json())
       .then(data => {
         // Enhance with mock data
-        const enhancedPlayers = data.map((p: Player) => ({
+        const enhancedPlayers = data.map((p) => ({
           ...p,
           team: 'Unknown Team',
           apps: 0,
