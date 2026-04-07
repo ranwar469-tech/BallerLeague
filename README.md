@@ -16,7 +16,7 @@ src/
    pages/
    App.jsx
    main.jsx
-server/
+ballerleague-server/
    src/
       app.js
       server.js
@@ -34,7 +34,7 @@ server/
 
 ## Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in `ballerleague-server`:
 
 ```
 PORT=5000
@@ -45,26 +45,34 @@ MONGODB_URI=
 
 ## Run Locally
 
-1. Install dependencies
+1. Install frontend dependencies
 
 ```bash
 npm install
 ```
 
-2. Start frontend + backend together
+2. Install backend dependencies
+
+```bash
+cd ballerleague-server
+npm install
+```
+
+3. Start backend
+
+```bash
+cd ballerleague-server
+npm run dev
+```
+
+4. Start frontend
 
 ```bash
 npm run dev
 ```
 
-3. Build frontend
+5. Build frontend
 
 ```bash
 npm run build
-```
-
-4. Run backend only
-
-```bash
-npm run start
 ```
