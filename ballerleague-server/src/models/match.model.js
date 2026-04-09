@@ -1,5 +1,37 @@
 import mongoose from 'mongoose';
 
+const goalEventSchema = new mongoose.Schema(
+  {
+    id: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+    minute: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 130
+    },
+    team_id: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+    scorer_player_id: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+    assist_player_id: {
+      type: Number,
+      default: null,
+      min: 1
+    }
+  },
+  { _id: false }
+);
+
 const matchSchema = new mongoose.Schema(
   {
     id: {
@@ -41,6 +73,24 @@ const matchSchema = new mongoose.Schema(
       type: String,
       default: '',
       trim: true
+    },
+    home_score: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    away_score: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    goal_events: {
+      type: [goalEventSchema],
+      default: []
+    },
+    result_recorded_at: {
+      type: Date,
+      default: null
     },
     published: {
       type: Boolean,

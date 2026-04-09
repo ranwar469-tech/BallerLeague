@@ -6,6 +6,7 @@ import { League } from '../../models/league.model.js';
 import { Season } from '../../models/season.model.js';
 import { SeasonTeam } from '../../models/season-team.model.js';
 import { Team } from '../../models/team.model.js';
+import { Player } from '../../models/player.model.js';
 
 const router = Router();
 
@@ -88,6 +89,28 @@ router.post(
 
   await SeasonTeam.create({ season_id: seasonId, team_id: teamId });
   return res.status(201).json({ success: true });
+  }
+);
+
+router.delete(
+  '/:id/teams/:teamId',
+  requireAuth,
+  requireAnyRole('league_admin', 'system_admin'),
+  async (req, res) => {
+    const seasonId = Number(req.params.id);
+    const teamId = Number(req.params.teamId);
+
+    const deleted = await SeasonTeam.findOneAndDelete({ season_id: seasonId, team_id: teamId });
+    if (!deleted) {
+      return res.status(404).json({ message: 'Season team assignment not found' });
+    }
+
+    await Player.updateMany(
+      { season_id: seasonId, team_id: teamId },
+      { team_id: null, season_id: null }
+    );
+
+    return res.json({ success: true });
   }
 );
 

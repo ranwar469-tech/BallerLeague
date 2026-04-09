@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Search, Bell, Settings, Trophy } from 'lucide-react';
+import { Search, Bell, Settings, Trophy, UserCog } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { clearAuthSession, getStoredUser } from '../lib/api';
 import { isAdminUser } from '../lib/auth';
@@ -55,6 +55,7 @@ export function Header() {
   const rolesText = currentUser?.roles?.length ? currentUser.roles.join(', ') : 'guest';
   const displayName = currentUser?.displayName || 'Guest';
   const canAccessAdmin = isAdminUser(currentUser);
+  const canAccessSystemAdmin = currentUser?.roles?.includes('system_admin');
 
   return (
     <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 md:px-10 py-3">
@@ -64,7 +65,7 @@ export function Header() {
             <Trophy size={20} />
           </div>
           <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight hidden md:block">
-            Sports Manager
+            Baller League
           </h2>
         </div>
         
@@ -83,7 +84,7 @@ export function Header() {
       
       <div className="flex flex-1 justify-end gap-4 md:gap-8 items-center">
         <nav className="items-center gap-6 hidden lg:flex">
-          <NavLink to="/" className={({isActive}) => isActive ? "text-blue-600 text-sm font-bold border-b-2 border-blue-600 py-1" : "text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium transition-colors"}>Dashboard</NavLink>
+          <NavLink to="/" className={({isActive}) => isActive ? "text-blue-600 text-sm font-bold border-b-2 border-blue-600 py-1" : "text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium transition-colors"}>Baller League</NavLink>
           <NavLink to="/matches" className={({isActive}) => isActive ? "text-blue-600 text-sm font-bold border-b-2 border-blue-600 py-1" : "text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium transition-colors"}>Matches</NavLink>
           <NavLink to="/standings" className={({isActive}) => isActive ? "text-blue-600 text-sm font-bold border-b-2 border-blue-600 py-1" : "text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium transition-colors"}>Standings</NavLink>
           <NavLink to="/teams" className={({isActive}) => isActive ? "text-blue-600 text-sm font-bold border-b-2 border-blue-600 py-1" : "text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium transition-colors"}>Teams</NavLink>
@@ -156,6 +157,18 @@ export function Header() {
                         <span className="ml-2 text-[10px]">Admins only</span>
                       </div>
                     )}
+                    {canAccessSystemAdmin ? (
+                      <NavLink
+                        to="/admin/users"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="block rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          <UserCog size={14} />
+                          System Users
+                        </span>
+                      </NavLink>
+                    ) : null}
                     <button
                       type="button"
                       onClick={handleLogout}

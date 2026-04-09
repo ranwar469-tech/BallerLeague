@@ -6,19 +6,10 @@ export function PlayerStats() {
   const [players, setPlayers] = useState([]);
 
   useEffect(() => {
-    api.get('/players')
+    api.get('/matches/player-stats')
       .then(({ data }) => data)
       .then(data => {
-        // Enhance with mock data
-        const enhancedPlayers = data.map((p) => ({
-          ...p,
-          team: 'Unknown Team',
-          apps: 0,
-          goals: 0,
-          assists: 0,
-          rating: 6.0
-        }));
-        setPlayers(enhancedPlayers);
+        setPlayers(Array.isArray(data) ? data : []);
       });
   }, []);
 
@@ -29,7 +20,7 @@ export function PlayerStats() {
           <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
             Player Statistics
           </h1>
-          <p className="text-slate-500 mt-1">Top performers across the league</p>
+          <p className="text-slate-500 mt-1">Top scorers and assist leaders across the league</p>
         </div>
 
         {/* Filters Bar */}
@@ -103,7 +94,7 @@ export function PlayerStats() {
                     <td className="px-6 py-4">
                       <div className="font-bold text-slate-900 dark:text-slate-100">{player.name}</div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{player.team}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{player.team_name || 'Unknown Team'}</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
                         {player.position}

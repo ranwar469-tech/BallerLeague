@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { 
   Users, 
   Trophy, 
   Activity, 
   Calendar, 
   ArrowUpRight, 
-  ArrowDownRight,
-  Timer
+  ArrowDownRight
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -15,161 +14,253 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar
+  ResponsiveContainer
 } from 'recharts';
+import { Link } from 'react-router-dom';
+import api from '../lib/api';
 
-const ACTIVITY_DATA = [
-  { name: 'MD1', goals: 12, attendance: 45000 },
-  { name: 'MD2', goals: 18, attendance: 48000 },
-  { name: 'MD3', goals: 15, attendance: 42000 },
-  { name: 'MD4', goals: 22, attendance: 51000 },
-  { name: 'MD5', goals: 14, attendance: 46000 },
-  { name: 'MD6', goals: 20, attendance: 53000 },
-  { name: 'MD7', goals: 24, attendance: 55000 },
-];
+function formatDateLabel(dateValue) {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) {
+    return 'Unknown';
+  }
 
-const UPCOMING_MATCHES = [
-  { home: 'Manchester Eagles', away: 'Liverpool Red Oaks', time: '14:00', date: 'Today' },
-  { home: 'Birmingham Bulls', away: 'London Lions', time: '16:30', date: 'Today' },
-  { home: 'Newcastle Knights', away: 'Leeds Warriors', time: '19:45', date: 'Tomorrow' },
-];
+  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' }).format(date);
+}
+
+function formatDateTime(dateValue) {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) {
+    return 'Unknown date';
+  }
+
+  return new Intl.DateTimeFormat('en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(date);
+}
+
+function toTime(dateValue) {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) {
+    return '--:--';
+  }
+
+  return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
+}
 
 export function Overview() {
+  const [teams, setTeams] = useState([]);
+  const [pastMatches, setPastMatches] = useState([]);
+  const [upcomingMatches, setUpcomingMatches] = useState([]);
+  const [seasons, setSeasons] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    async function loadOverview() {
+      setIsLoading(true);
+      setErrorMessage('');
+
+      try {
+        const [{ data: teamRows }, { data: pastRows }, { data: upcomingRows }, { data: seasonRows }] = await Promise.all([
+          api.get('/teams'),
+          api.get('/matches/past'),
+          api.get('/matches/upcoming'),
+          api.get('/seasons')
+        ]);
+
+        setTeams(Array.isArray(teamRows) ? teamRows : []);
+        setPastMatches(Array.isArray(pastRows) ? pastRows : []);
+        setUpcomingMatches(Array.isArray(upcomingRows) ? upcomingRows : []);
+        setSeasons(Array.isArray(seasonRows) ? seasonRows : []);
+      } catch (error) {
+        setErrorMessage(error.response?.data?.message || 'Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadOverview();
+  }, []);
+
+  const completedMatches = useMemo(
+    () => pastMatches.filter((match) => match.status === 'completed'),
+    [pastMatches]
+  );
+
+  const goalsScored = useMemo(
+    () => completedMatches.reduce((sum, match) => sum + Number(match.home_score || 0) + Number(match.away_score || 0), 0),
+    [completedMatches]
+  );
+
+  const averageGoals = useMemo(() => {
+    if (completedMatches.length === 0) {
+      return '0.0';
+    }
+
+    return (goalsScored / completedMatches.length).toFixed(1);
+  }, [completedMatches.length, goalsScored]);
+
+  const activityData = useMemo(() => {
+    return [...completedMatches]
+      .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
+      .slice(-7)
+      .map((match) => ({
+        name: formatDateLabel(match.kickoff_at),
+        goals: Number(match.home_score || 0) + Number(match.away_score || 0)
+      }));
+  }, [completedMatches]);
+
+  const recentActivity = useMemo(() => {
+    return [...pastMatches]
+      .sort((a, b) => new Date(b.kickoff_at) - new Date(a.kickoff_at))
+      .slice(0, 5);
+  }, [pastMatches]);
+
+  const selectedSeason = seasons.length > 0 ? seasons[0] : null;
+
   return (
     <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-slate-950">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
         <div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-            League Overview
+            Baller League Overview
           </h1>
-          <p className="text-slate-500 mt-1">Season 2023/24 • Matchday 24 of 38</p>
+          <p className="text-slate-500 mt-1">
+            {selectedSeason ? `${selectedSeason.league_name} • ${selectedSeason.name}` : 'Live competition snapshot'}
+          </p>
         </div>
 
-        {/* Stats Grid */}
+        {errorMessage ? (
+          <div className="rounded-lg border border-rose-300 bg-rose-50 text-rose-700 px-4 py-3 text-sm dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-900/40">
+            {errorMessage}
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard 
             title="Total Teams" 
-            value="20" 
+            value={String(teams.length)} 
             icon={<Users className="text-blue-600" size={24} />}
-            trend="+2" 
+            trend={isLoading ? '...' : `${upcomingMatches.length} upcoming`} 
             trendUp={true}
-            label="vs last season"
+            label="registered"
           />
           <StatCard 
             title="Matches Played" 
-            value="234" 
+            value={String(completedMatches.length)} 
             icon={<Calendar className="text-emerald-600" size={24} />}
-            trend="65%" 
+            trend={isLoading ? '...' : `${pastMatches.length} past fixtures`} 
             trendUp={true}
-            label="completion"
+            label="completed"
           />
           <StatCard 
             title="Goals Scored" 
-            value="642" 
+            value={String(goalsScored)} 
             icon={<Activity className="text-orange-600" size={24} />}
-            trend="+12%" 
+            trend={isLoading ? '...' : `${averageGoals} per match`} 
             trendUp={true}
-            label="vs last season"
+            label="completed fixtures"
           />
           <StatCard 
-            title="Avg. Attendance" 
-            value="42,500" 
+            title="Upcoming Fixtures" 
+            value={String(upcomingMatches.length)} 
             icon={<Trophy className="text-purple-600" size={24} />}
-            trend="-1.2%" 
-            trendUp={false}
-            label="vs last season"
+            trend={isLoading ? '...' : `${teams.length > 0 ? (upcomingMatches.length / teams.length).toFixed(1) : '0.0'} per team`} 
+            trendUp={upcomingMatches.length > 0}
+            label="published"
           />
         </div>
 
-        {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Chart */}
           <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-slate-900 dark:text-slate-100">Goals per Matchday</h3>
-              <select className="bg-slate-50 dark:bg-slate-800 border-none text-sm rounded-lg px-3 py-1 text-slate-600 dark:text-slate-400 focus:ring-0">
-                <option>Last 7 Matchdays</option>
-                <option>All Season</option>
-              </select>
+              <h3 className="font-bold text-slate-900 dark:text-slate-100">Goals in Recent Completed Matches</h3>
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Last {activityData.length} fixtures</span>
             </div>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={ACTIVITY_DATA}>
-                  <defs>
-                    <linearGradient id="colorGoals" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 12 }} 
-                    dy={10}
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 12 }} 
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#fff', 
-                      borderRadius: '8px', 
-                      border: '1px solid #e2e8f0',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="goals" 
-                    stroke="#2563eb" 
-                    strokeWidth={3}
-                    fillOpacity={1} 
-                    fill="url(#colorGoals)" 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+
+            {activityData.length === 0 ? (
+              <div className="h-75 w-full flex items-center justify-center text-sm text-slate-500">
+                No completed match data yet.
+              </div>
+            ) : (
+              <div className="h-75 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={activityData}>
+                    <defs>
+                      <linearGradient id="colorGoals" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#64748b', fontSize: 12 }} 
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#64748b', fontSize: 12 }} 
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#fff', 
+                        borderRadius: '8px', 
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="goals" 
+                      stroke="#2563eb" 
+                      strokeWidth={3}
+                      fillOpacity={1} 
+                      fill="url(#colorGoals)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
 
-          {/* Side Panel - Upcoming */}
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
             <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-6">Upcoming Matches</h3>
             <div className="space-y-6">
-              {UPCOMING_MATCHES.map((match, i) => (
-                <div key={i} className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
-                  <div className="flex flex-col items-center min-w-[60px] bg-slate-50 dark:bg-slate-800 rounded-lg p-2">
-                    <span className="text-xs font-bold text-slate-500 uppercase">{match.date}</span>
-                    <span className="text-sm font-black text-slate-900 dark:text-slate-100">{match.time}</span>
+              {upcomingMatches.length === 0 ? (
+                <p className="text-sm text-slate-500">No upcoming fixtures published yet.</p>
+              ) : upcomingMatches.slice(0, 5).map((match) => (
+                <div key={match.id} className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
+                  <div className="flex flex-col items-center min-w-15 bg-slate-50 dark:bg-slate-800 rounded-lg p-2">
+                    <span className="text-xs font-bold text-slate-500 uppercase">{formatDateLabel(match.kickoff_at)}</span>
+                    <span className="text-sm font-black text-slate-900 dark:text-slate-100">{toTime(match.kickoff_at)}</span>
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{match.home}</div>
+                    <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{match.home_team_name}</div>
                     <div className="text-xs text-slate-500 my-1">vs</div>
-                    <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{match.away}</div>
+                    <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{match.away_team_name}</div>
                   </div>
-                  <button className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-blue-600">
+                  <Link to="/matches" className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-blue-600">
                     <ArrowUpRight size={18} />
-                  </button>
+                  </Link>
                 </div>
               ))}
             </div>
-            <button className="w-full mt-6 py-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <Link to="/matches" className="block text-center w-full mt-6 py-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
               View Full Schedule
-            </button>
+            </Link>
           </div>
         </div>
 
-        {/* Recent Activity Table */}
         <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
           <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
             <h3 className="font-bold text-slate-900 dark:text-slate-100">Recent League Activity</h3>
-            <button className="text-sm text-blue-600 font-medium hover:underline">View All</button>
+            <Link to="/results" className="text-sm text-blue-600 font-medium hover:underline">View All</Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -183,22 +274,26 @@ export function Overview() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                {[1, 2, 3].map((_, i) => (
-                  <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                {recentActivity.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-6 text-sm text-slate-500">No recent match activity yet.</td>
+                  </tr>
+                ) : recentActivity.map((match) => (
+                  <tr key={match.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="font-medium text-slate-900 dark:text-slate-100">Manchester Eagles vs London Lions</div>
+                        <div className="font-medium text-slate-900 dark:text-slate-100">{match.home_team_name} vs {match.away_team_name}</div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-slate-500">Oct 24, 2023</td>
-                    <td className="px-4 py-4 font-bold text-slate-900 dark:text-slate-100">2 - 1</td>
+                    <td className="px-4 py-4 text-slate-500">{formatDateTime(match.kickoff_at)}</td>
+                    <td className="px-4 py-4 font-bold text-slate-900 dark:text-slate-100">{Number(match.home_score || 0)} - {Number(match.away_score || 0)}</td>
                     <td className="px-4 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-                        Final
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${match.status === 'completed' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                        {match.status}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <button className="text-slate-400 hover:text-blue-600 transition-colors">Details</button>
+                      <Link to="/results" className="text-slate-400 hover:text-blue-600 transition-colors">Details</Link>
                     </td>
                   </tr>
                 ))}

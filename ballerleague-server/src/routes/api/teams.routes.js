@@ -16,6 +16,33 @@ router.get('/', async (req, res) => {
   return res.json(teams);
 });
 
+router.delete(
+  '/:id/players/:playerId',
+  requireAuth,
+  requireAnyRole('league_admin', 'system_admin'),
+  async (req, res) => {
+    const teamId = Number(req.params.id);
+    const playerId = Number(req.params.playerId);
+    const seasonId = req.query.season_id ? Number(req.query.season_id) : null;
+
+    if (!seasonId) {
+      return res.status(400).json({ message: 'season_id is required to remove a player from a roster' });
+    }
+
+    const updatedPlayer = await Player.findOneAndUpdate(
+      { id: playerId, team_id: teamId, season_id: seasonId },
+      { team_id: null, season_id: null },
+      { new: true, projection: { _id: 0 } }
+    );
+
+    if (!updatedPlayer) {
+      return res.status(404).json({ message: 'Player roster assignment not found' });
+    }
+
+    return res.json({ success: true });
+  }
+);
+
 router.post('/', requireAuth, requireAnyRole('league_admin', 'system_admin'), createTeamValidator, validateRequest, async (req, res) => {
   const last = await Team.findOne().sort({ id: -1 }).select('id');
   const nextMongoId = last ? Number(last.id) + 1 : 1;
