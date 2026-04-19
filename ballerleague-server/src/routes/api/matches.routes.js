@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import axios from 'axios';
 import { validateRequest } from '../../middleware/validate.js';
 import { requireAuth, requireAnyRole } from '../../middleware/auth.js';
 import { Match } from '../../models/match.model.js';
@@ -10,6 +11,8 @@ import { Event } from '../../models/event.model.js';
 import {
   createMatchCalendarEventValidator,
   createManualMatchValidator,
+  geocodeReverseValidator,
+  geocodeSearchValidator,
   matchCalendarEventIdParamValidator,
   matchIdParamValidator,
   publishMatchValidator,
@@ -25,6 +28,75 @@ import {
 } from '../../validators/match.validators.js';
 
 const router = Router();
+const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
+const GEOCODE_CACHE_TTL_MS = 5 * 60 * 1000;
+const geocodeCache = new Map();
+
+function getCache(cacheKey) {
+  const entry = geocodeCache.get(cacheKey);
+  if (!entry) {
+    return null;
+  }
+
+  if (entry.expiresAt < Date.now()) {
+    geocodeCache.delete(cacheKey);
+    return null;
+  }
+
+  return entry.value;
+}
+
+function setCache(cacheKey, value) {
+  geocodeCache.set(cacheKey, {
+    value,
+    expiresAt: Date.now() + GEOCODE_CACHE_TTL_MS
+  });
+}
+
+function asVenueDetails(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+
+  const normalizedName = typeof value.name === 'string' ? value.name.trim() : '';
+  const normalizedAddress = typeof value.address === 'string' ? value.address.trim() : '';
+  const normalizedPlaceId = typeof value.place_id === 'string' ? value.place_id.trim() : null;
+
+  const latitude =
+    value.latitude === null || typeof value.latitude === 'undefined' || value.latitude === ''
+      ? null
+      : Number(value.latitude);
+  const longitude =
+    value.longitude === null || typeof value.longitude === 'undefined' || value.longitude === ''
+      ? null
+      : Number(value.longitude);
+
+  const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude);
+  const hasAnyText = Boolean(normalizedName || normalizedAddress || normalizedPlaceId);
+
+  if (!hasAnyText && !hasCoordinates) {
+    return null;
+  }
+
+  return {
+    name: normalizedName,
+    address: normalizedAddress,
+    latitude: hasCoordinates ? latitude : null,
+    longitude: hasCoordinates ? longitude : null,
+    place_id: normalizedPlaceId || null
+  };
+}
+
+function normalizeVenuePayload(body) {
+  const details = asVenueDetails(body.venue_details);
+  const directVenue = typeof body.venue === 'string' ? body.venue.trim() : '';
+  const fallbackVenue = details?.name || details?.address || '';
+
+  return {
+    venue: directVenue || fallbackVenue,
+    venue_details: details
+  };
+}
 
 function buildTeamNameMap(teams) {
   return new Map(teams.map((team) => [team.id, team.name]));
@@ -189,6 +261,105 @@ function mapEventDocument(eventDoc) {
   };
 }
 
+function mapNominatimPlace(item) {
+  const latitude = Number(item.lat);
+  const longitude = Number(item.lon);
+
+  return {
+    place_id: item.place_id ? String(item.place_id) : null,
+    name: item.name || item.display_name || '',
+    address: item.display_name || '',
+    latitude: Number.isFinite(latitude) ? latitude : null,
+    longitude: Number.isFinite(longitude) ? longitude : null,
+    type: item.type || '',
+    category: item.category || ''
+  };
+}
+
+router.get(
+  '/geocode/search',
+  requireAuth,
+  requireAnyRole('league_admin', 'system_admin'),
+  geocodeSearchValidator,
+  validateRequest,
+  async (req, res) => {
+    try {
+      const queryText = String(req.query.q || '').trim();
+      const limit = req.query.limit ? Number(req.query.limit) : 8;
+      const cacheKey = `search:${queryText.toLowerCase()}:${limit}`;
+      const cached = getCache(cacheKey);
+
+      if (cached) {
+        return res.json(cached);
+      }
+
+      const response = await axios.get(`${NOMINATIM_BASE_URL}/search`, {
+        params: {
+          q: queryText,
+          format: 'jsonv2',
+          addressdetails: 1,
+          limit
+        },
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'BallerLeague/1.0 (venue-search)'
+        }
+      });
+
+      const data = Array.isArray(response.data) ? response.data.map(mapNominatimPlace) : [];
+      setCache(cacheKey, data);
+      return res.json(data);
+    } catch (error) {
+      return res.status(502).json({
+        message: 'Failed to search venues via geocoding provider',
+        error: error.message
+      });
+    }
+  }
+);
+
+router.get(
+  '/geocode/reverse',
+  requireAuth,
+  requireAnyRole('league_admin', 'system_admin'),
+  geocodeReverseValidator,
+  validateRequest,
+  async (req, res) => {
+    try {
+      const lat = Number(req.query.lat);
+      const lon = Number(req.query.lon);
+      const cacheKey = `reverse:${lat.toFixed(6)}:${lon.toFixed(6)}`;
+      const cached = getCache(cacheKey);
+
+      if (cached) {
+        return res.json(cached);
+      }
+
+      const response = await axios.get(`${NOMINATIM_BASE_URL}/reverse`, {
+        params: {
+          lat,
+          lon,
+          format: 'jsonv2',
+          addressdetails: 1
+        },
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'BallerLeague/1.0 (venue-reverse-geocode)'
+        }
+      });
+
+      const result = mapNominatimPlace(response.data || {});
+      setCache(cacheKey, result);
+      return res.json(result);
+    } catch (error) {
+      return res.status(502).json({
+        message: 'Failed to reverse geocode location',
+        error: error.message
+      });
+    }
+  }
+);
+
 router.get('/calendar', async (req, res) => {
   try {
     const events = await Event.find({}, { _id: 0 }).sort({ 'start.dateTime': 1 });
@@ -215,7 +386,6 @@ router.get('/calendar/:id', matchCalendarEventIdParamValidator, validateRequest,
 router.post(
   '/calendar',
   requireAuth,
-  requireAnyRole('league_admin', 'system_admin'),
   createMatchCalendarEventValidator,
   validateRequest,
   async (req, res) => {
@@ -251,7 +421,6 @@ router.post(
 router.patch(
   '/calendar/:id/google-id',
   requireAuth,
-  requireAnyRole('league_admin', 'system_admin'),
   updateMatchCalendarGoogleIdValidator,
   validateRequest,
   async (req, res) => {
@@ -483,12 +652,15 @@ router.post(
     const last = await Match.findOne().sort({ id: -1 }).select('id');
     const nextMatchId = last ? Number(last.id) + 1 : 1;
 
+    const normalizedVenue = normalizeVenuePayload(req.body);
+
     const created = await Match.create({
       id: nextMatchId,
       season_id: seasonId,
       home_team_id: homeTeamId,
       away_team_id: awayTeamId,
-      venue: req.body.venue ?? '',
+      venue: normalizedVenue.venue,
+      venue_details: normalizedVenue.venue_details,
       kickoff_at: new Date(req.body.kickoff_at),
       published: req.body.published ?? false,
       created_by: req.auth?.sub || null
@@ -603,7 +775,14 @@ router.post(
       assist_player_id: assistPlayerId
     };
 
-    match.goal_events = [...(match.goal_events || []), nextGoalEvent];
+    match.goal_events = [...(match.goal_events || []), nextGoalEvent].sort((left, right) => {
+      const minuteDiff = Number(left.minute) - Number(right.minute);
+      if (minuteDiff !== 0) {
+        return minuteDiff;
+      }
+
+      return Number(left.id) - Number(right.id);
+    });
     if (teamId === match.home_team_id) {
       match.home_score = Number(match.home_score || 0) + 1;
     } else {
@@ -676,8 +855,10 @@ router.patch(
       updates.kickoff_at = new Date(req.body.kickoff_at);
     }
 
-    if (typeof req.body.venue === 'string') {
-      updates.venue = req.body.venue;
+    if (typeof req.body.venue !== 'undefined' || typeof req.body.venue_details !== 'undefined') {
+      const normalizedVenue = normalizeVenuePayload(req.body);
+      updates.venue = normalizedVenue.venue;
+      updates.venue_details = normalizedVenue.venue_details;
     }
 
     if (typeof req.body.season_id !== 'undefined') {
@@ -701,6 +882,35 @@ router.patch(
 
     const [enriched] = await enrichMatches([updated]);
     return res.json(enriched);
+  }
+);
+
+router.delete(
+  '/:id',
+  requireAuth,
+  requireAnyRole('league_admin', 'system_admin'),
+  matchIdParamValidator,
+  validateRequest,
+  async (req, res) => {
+    const matchId = Number(req.params.id);
+    const match = await Match.findOne({ id: matchId }, { _id: 0 }).lean();
+
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    await Promise.all([
+      Match.deleteOne({ id: matchId }),
+      Event.deleteOne({ id: `match-fixture-${matchId}` })
+    ]);
+
+    await recomputeAndPersistPlayerStatsForSeason(match.season_id);
+
+    return res.json({
+      success: true,
+      deleted: true,
+      match_id: matchId
+    });
   }
 );
 

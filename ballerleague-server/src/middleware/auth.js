@@ -44,7 +44,7 @@ export function requireAnyRole(...allowedRoles) {
     const hasRole = allowedRoles.some((role) => userRoles.includes(role));
 
     if (!hasRole) {
-      return res.status(403).json({ message: 'Forbidden: insufficient role permissions' });
+      return res.status(403).json({ message: 'Sorry, your current role doesn\'t allow access to this feature' });
     }
 
     return next();

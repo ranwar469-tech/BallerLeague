@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Settings as SettingsIcon, 
   Plus, 
-  Trash2, 
-  Edit2, 
   Users, 
   Calendar, 
   Trophy, 
@@ -15,7 +12,7 @@ import api from '../lib/api';
 import { getCurrentUser, isAdminUser } from '../lib/auth';
 
 
-export function Settings() {
+export function LeagueSettings() {
   const [activeTab, setActiveTab] = useState('roster');
   const canManage = isAdminUser(getCurrentUser());
 
@@ -24,7 +21,7 @@ export function Settings() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-            League Management
+            League Settings
           </h1>
           <p className="text-slate-500 mt-1">Configure leagues, seasons, teams, and players.</p>
           {!canManage ? (
@@ -83,6 +80,10 @@ export function Settings() {
       </div>
     </main>
   );
+}
+
+function asList(data) {
+  return Array.isArray(data) ? data : [];
 }
 
 function RosterOverview() {
@@ -387,17 +388,22 @@ function NavButton({ active, onClick, icon, label }) {
 
 function LeaguesManager() {
   const [leagues, setLeagues] = useState([]);
-  const [formData, setFormData] = useState({ name: '', country: '', logo: '' });
+  const [formData, setFormData] = useState({ name: '', country: '' });
+
+  async function refreshLeagues() {
+    const { data } = await api.get('/leagues');
+    setLeagues(asList(data));
+  }
 
   useEffect(() => {
-    api.get('/leagues').then(({ data }) => setLeagues(data));
+    refreshLeagues();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { data: newLeague } = await api.post('/leagues', formData);
     setLeagues([...leagues, newLeague]);
-    setFormData({ name: '', country: '', logo: '' });
+    setFormData({ name: '', country: '' });
   };
 
   return (
@@ -432,7 +438,6 @@ function LeaguesManager() {
             <tr>
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Country</th>
-              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -440,9 +445,6 @@ function LeaguesManager() {
               <tr key={league.id}>
                 <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{league.name}</td>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{league.country}</td>
-                <td className="px-4 py-3 text-right">
-                  <button className="text-slate-400 hover:text-red-600 transition-colors"><Trash2 size={16} /></button>
-                </td>
               </tr>
             ))}
           </tbody>
@@ -457,16 +459,25 @@ function SeasonsManager() {
   const [leagues, setLeagues] = useState([]);
   const [formData, setFormData] = useState({ league_id: '', name: '', start_date: '', end_date: '' });
 
+  async function refreshSeasons() {
+    const { data } = await api.get('/seasons');
+    setSeasons(asList(data));
+  }
+
+  async function refreshLeagues() {
+    const { data } = await api.get('/leagues');
+    setLeagues(asList(data));
+  }
+
   useEffect(() => {
-    api.get('/seasons').then(({ data }) => setSeasons(data));
-    api.get('/leagues').then(({ data }) => setLeagues(data));
+    refreshSeasons();
+    refreshLeagues();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     await api.post('/seasons', formData);
-    // Refresh to get league name join
-    api.get('/seasons').then(({ data }) => setSeasons(data));
+    await refreshSeasons();
     setFormData({ ...formData, name: '' });
   };
 
@@ -540,9 +551,19 @@ function TeamsManager() {
   const [formData, setFormData] = useState({ name: '', stadium: '', city: '' });
   const [assignData, setAssignData] = useState({ team_id: '', season_id: '' });
 
+  async function refreshTeams() {
+    const { data } = await api.get('/teams');
+    setTeams(asList(data));
+  }
+
+  async function refreshSeasons() {
+    const { data } = await api.get('/seasons');
+    setSeasons(asList(data));
+  }
+
   useEffect(() => {
-    api.get('/teams').then(({ data }) => setTeams(data));
-    api.get('/seasons').then(({ data }) => setSeasons(data));
+    refreshTeams();
+    refreshSeasons();
   }, []);
 
   const handleCreateTeam = async (e) => {
@@ -558,6 +579,7 @@ function TeamsManager() {
     
     await api.post(`/seasons/${assignData.season_id}/teams`, { team_id: assignData.team_id });
     alert('Team assigned to season successfully');
+    await refreshSeasons();
     setAssignData({ team_id: '', season_id: '' });
   };
 
@@ -651,10 +673,25 @@ function PlayersManager() {
   const [formData, setFormData] = useState({ name: '', position: '', number: '', nationality: '' });
   const [assignData, setAssignData] = useState({ player_id: '', team_id: '', season_id: '' });
 
+  async function refreshPlayers() {
+    const { data } = await api.get('/players');
+    setPlayers(asList(data));
+  }
+
+  async function refreshTeams() {
+    const { data } = await api.get('/teams');
+    setTeams(asList(data));
+  }
+
+  async function refreshSeasons() {
+    const { data } = await api.get('/seasons');
+    setSeasons(asList(data));
+  }
+
   useEffect(() => {
-    api.get('/players').then(({ data }) => setPlayers(data));
-    api.get('/teams').then(({ data }) => setTeams(data));
-    api.get('/seasons').then(({ data }) => setSeasons(data));
+    refreshPlayers();
+    refreshTeams();
+    refreshSeasons();
   }, []);
 
   const handleCreatePlayer = async (e) => {

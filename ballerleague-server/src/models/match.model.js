@@ -32,6 +32,39 @@ const goalEventSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const venueDetailsSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    address: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    latitude: {
+      type: Number,
+      default: null,
+      min: -90,
+      max: 90
+    },
+    longitude: {
+      type: Number,
+      default: null,
+      min: -180,
+      max: 180
+    },
+    place_id: {
+      type: String,
+      default: null,
+      trim: true
+    }
+  },
+  { _id: false }
+);
+
 const matchSchema = new mongoose.Schema(
   {
     id: {
@@ -59,6 +92,10 @@ const matchSchema = new mongoose.Schema(
       type: String,
       default: '',
       trim: true
+    },
+    venue_details: {
+      type: venueDetailsSchema,
+      default: null
     },
     kickoff_at: {
       type: Date,

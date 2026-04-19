@@ -18,36 +18,7 @@ import {
 } from 'recharts';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
-
-function formatDateLabel(dateValue) {
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) {
-    return 'Unknown';
-  }
-
-  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' }).format(date);
-}
-
-function formatDateTime(dateValue) {
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) {
-    return 'Unknown date';
-  }
-
-  return new Intl.DateTimeFormat('en-GB', {
-    dateStyle: 'medium',
-    timeStyle: 'short'
-  }).format(date);
-}
-
-function toTime(dateValue) {
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) {
-    return '--:--';
-  }
-
-  return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
-}
+import { formatDateLabel, formatDateTime, formatTime24 } from '../lib/date';
 
 export function Overview() {
   const [teams, setTeams] = useState([]);
@@ -238,7 +209,7 @@ export function Overview() {
                 <div key={match.id} className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
                   <div className="flex flex-col items-center min-w-15 bg-slate-50 dark:bg-slate-800 rounded-lg p-2">
                     <span className="text-xs font-bold text-slate-500 uppercase">{formatDateLabel(match.kickoff_at)}</span>
-                    <span className="text-sm font-black text-slate-900 dark:text-slate-100">{toTime(match.kickoff_at)}</span>
+                    <span className="text-sm font-black text-slate-900 dark:text-slate-100">{formatTime24(match.kickoff_at)}</span>
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{match.home_team_name}</div>

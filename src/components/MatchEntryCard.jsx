@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { BarChart3, Shield, Save } from 'lucide-react';
 import { getCurrentUser, hasAnyRole } from '../lib/auth';
 import api from '../lib/api';
+import { formatDateTime } from '../lib/date';
 
 export function MatchEntryCard() {
   const canEditResult = hasAnyRole(getCurrentUser(), ['league_admin', 'system_admin']);
@@ -23,7 +24,7 @@ export function MatchEntryCard() {
     [matches, selectedMatchId]
   );
 
-  const playerNameMap = useMemo(() => {
+  const playerNames = useMemo(() => {
     return new Map(players.map((player) => [Number(player.id), player.name]));
   }, [players]);
 
@@ -32,7 +33,14 @@ export function MatchEntryCard() {
       return [];
     }
 
-    return [...selectedMatch.goal_events].sort((left, right) => Number(left.minute) - Number(right.minute));
+    return [...selectedMatch.goal_events].sort((left, right) => {
+      const minuteDiff = Number(left.minute) - Number(right.minute);
+      if (minuteDiff !== 0) {
+        return minuteDiff;
+      }
+
+      return Number(left.id) - Number(right.id);
+    });
   }, [selectedMatch]);
 
   const teamPlayers = useMemo(() => {
@@ -44,16 +52,37 @@ export function MatchEntryCard() {
     return players.filter((player) => Number(player.team_id) === goalTeam);
   }, [players, selectedMatch, goalTeamId]);
 
-  async function loadData() {
-    try {
-      const [{ data: allMatches }, { data: allPlayers }] = await Promise.all([
-        api.get('/matches/admin/all'),
-        api.get('/players')
-      ]);
+  function resetGoalForm() {
+    setGoalMinute('');
+    setScorerPlayerId('');
+    setAssistPlayerId('');
+  }
 
-      const matchRows = Array.isArray(allMatches) ? allMatches : [];
+  async function refreshData() {
+    try {
+      let matchResponse;
+      let upcomingResponse;
+      let allPlayersResponse;
+
+      if (canEditResult) {
+        [matchResponse, allPlayersResponse] = await Promise.all([api.get('/matches/admin/all'), api.get('/players')]);
+      } else {
+        [matchResponse, upcomingResponse, allPlayersResponse] = await Promise.all([
+          api.get('/matches/past'),
+          api.get('/matches/upcoming'),
+          api.get('/players')
+        ]);
+      }
+
+      const matchRows = canEditResult
+        ? (Array.isArray(matchResponse?.data) ? matchResponse.data : [])
+        : [
+            ...(Array.isArray(matchResponse?.data) ? matchResponse.data : []),
+            ...(Array.isArray(upcomingResponse?.data) ? upcomingResponse.data : [])
+          ].filter((match, index, rows) => rows.findIndex((item) => String(item.id) === String(match.id)) === index);
+
       setMatches(matchRows);
-      setPlayers(Array.isArray(allPlayers) ? allPlayers : []);
+      setPlayers(Array.isArray(allPlayersResponse.data) ? allPlayersResponse.data : []);
 
       if (matchRows.length > 0) {
         const currentMatch = matchRows.find((match) => String(match.id) === String(selectedMatchId)) || matchRows[0];
@@ -61,6 +90,11 @@ export function MatchEntryCard() {
         setHomeScore(String(currentMatch.home_score ?? 0));
         setAwayScore(String(currentMatch.away_score ?? 0));
         setGoalTeamId(String(currentMatch.home_team_id));
+      } else {
+        setSelectedMatchId('');
+        setHomeScore('0');
+        setAwayScore('0');
+        setGoalTeamId('');
       }
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Failed to load match results data');
@@ -68,7 +102,7 @@ export function MatchEntryCard() {
   }
 
   useEffect(() => {
-    loadData();
+    refreshData();
   }, []);
 
   useEffect(() => {
@@ -79,10 +113,8 @@ export function MatchEntryCard() {
     setHomeScore(String(selectedMatch.home_score ?? 0));
     setAwayScore(String(selectedMatch.away_score ?? 0));
     setGoalTeamId(String(selectedMatch.home_team_id));
-    setScorerPlayerId('');
-    setAssistPlayerId('');
-    setGoalMinute('');
-  }, [selectedMatchId]);
+    resetGoalForm();
+  }, [selectedMatch]);
 
   async function handleSaveResult(event) {
     event.preventDefault();
@@ -102,7 +134,7 @@ export function MatchEntryCard() {
         status: 'completed'
       });
 
-      await loadData();
+      await refreshData();
       setSuccessMessage('Match result saved and standings recalculated.');
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Failed to save match result');
@@ -135,10 +167,8 @@ export function MatchEntryCard() {
         assist_player_id: assistPlayerId ? Number(assistPlayerId) : null
       });
 
-      await loadData();
-      setGoalMinute('');
-      setScorerPlayerId('');
-      setAssistPlayerId('');
+      await refreshData();
+      resetGoalForm();
       setSuccessMessage('Goal event recorded and player stats updated.');
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Failed to record goal event');
@@ -155,7 +185,7 @@ export function MatchEntryCard() {
       </div>
 
       {!canEditResult ? (
-        <p className="text-[11px] text-slate-500 mb-4">Only league admins or system admins can use this feature.</p>
+        <p className="text-[11px] text-slate-500 mb-4">Your role does not allow you to record match results or goal events.</p>
       ) : null}
 
       {errorMessage ? (
@@ -175,7 +205,7 @@ export function MatchEntryCard() {
         >
           {matches.map((match) => (
             <option key={match.id} value={String(match.id)}>
-              #{match.id} - {match.home_team_name} vs {match.away_team_name}
+              #{match.id} - {formatDateTime(match.kickoff_at)} - {match.home_team_name} vs {match.away_team_name}
             </option>
           ))}
         </select>
@@ -241,13 +271,13 @@ export function MatchEntryCard() {
             </div>
           ) : (
             <div className="space-y-3">
-              {goalEvents.map((goalEvent) => {
+              {goalEvents.map((goalEvent, index) => {
                 const scoringTeamName = Number(goalEvent.team_id) === Number(selectedMatch?.home_team_id)
                   ? selectedMatch?.home_team_name
                   : selectedMatch?.away_team_name;
-                const scorerName = playerNameMap.get(Number(goalEvent.scorer_player_id)) || `Player ${goalEvent.scorer_player_id}`;
+                const scorerName = playerNames.get(Number(goalEvent.scorer_player_id)) || `Player ${goalEvent.scorer_player_id}`;
                 const assistName = goalEvent.assist_player_id
-                  ? playerNameMap.get(Number(goalEvent.assist_player_id)) || `Player ${goalEvent.assist_player_id}`
+                  ? playerNames.get(Number(goalEvent.assist_player_id)) || `Player ${goalEvent.assist_player_id}`
                   : null;
 
                 return (
@@ -271,7 +301,7 @@ export function MatchEntryCard() {
                     </div>
 
                     <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Goal #{goalEvent.id}
+                      Goal #{index + 1}
                     </div>
                   </div>
                 );

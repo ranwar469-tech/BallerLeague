@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Search, Bell, Settings, Trophy, UserCog } from 'lucide-react';
+import { Settings, Trophy, UserCog } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { clearAuthSession, getStoredUser } from '../lib/api';
 import { isAdminUser } from '../lib/auth';
@@ -69,31 +69,10 @@ export function Header() {
           </h2>
         </div>
         
-        <label className="flex-col min-w-40 h-10 max-w-64 hidden md:flex">
-          <div className="flex w-full flex-1 items-stretch rounded-lg h-full">
-            <div className="text-slate-500 flex border-none bg-slate-100 dark:bg-slate-800 items-center justify-center pl-4 rounded-l-lg border-r-0">
-              <Search size={20} />
-            </div>
-            <input 
-              className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none border-none bg-slate-100 dark:bg-slate-800 h-full placeholder:text-slate-500 px-4 rounded-l-none border-l-0 pl-2 text-base font-normal" 
-              placeholder="Search matches..." 
-            />
-          </div>
-        </label>
       </div>
       
       <div className="flex flex-1 justify-end gap-4 md:gap-8 items-center">
-        <nav className="items-center gap-6 hidden lg:flex">
-          <NavLink to="/" className={({isActive}) => isActive ? "text-blue-600 text-sm font-bold border-b-2 border-blue-600 py-1" : "text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium transition-colors"}>Baller League</NavLink>
-          <NavLink to="/matches" className={({isActive}) => isActive ? "text-blue-600 text-sm font-bold border-b-2 border-blue-600 py-1" : "text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium transition-colors"}>Matches</NavLink>
-          <NavLink to="/standings" className={({isActive}) => isActive ? "text-blue-600 text-sm font-bold border-b-2 border-blue-600 py-1" : "text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium transition-colors"}>Standings</NavLink>
-          <NavLink to="/teams" className={({isActive}) => isActive ? "text-blue-600 text-sm font-bold border-b-2 border-blue-600 py-1" : "text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium transition-colors"}>Teams</NavLink>
-        </nav>
-        
         <div className="flex gap-2">
-          <button className="flex items-center justify-center rounded-lg size-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-            <Bell size={20} />
-          </button>
           {canAccessAdmin ? (
             <NavLink to="/settings" className="flex items-center justify-center rounded-lg size-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
               <Settings size={20} />
@@ -104,7 +83,7 @@ export function Header() {
                 type="button"
                 disabled
                 className="flex items-center justify-center rounded-lg size-10 bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed opacity-60"
-                title="Only league admins/system admins can use settings"
+                title="Only league admins/system admins can use league settings"
               >
                 <Settings size={20} />
               </button>
@@ -149,11 +128,11 @@ export function Header() {
                         onClick={() => setIsProfileOpen(false)}
                         className="block rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                       >
-                        Admin Settings
+                        League Settings
                       </NavLink>
                     ) : (
                       <div className="rounded-lg px-3 py-2 text-sm text-slate-400 cursor-not-allowed">
-                        Admin Settings
+                        League Settings
                         <span className="ml-2 text-[10px]">Admins only</span>
                       </div>
                     )}

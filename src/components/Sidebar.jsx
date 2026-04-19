@@ -7,7 +7,8 @@ import {
   Activity, 
   RefreshCw,
   Settings,
-  UserCog
+  UserCog,
+  CalendarCheckIcon
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { getCurrentUser, isAdminUser } from '../lib/auth';
@@ -27,15 +28,16 @@ export function Sidebar() {
         </div>
         
         <nav className="flex flex-col gap-1">
-          <NavItem to="/" icon={<LayoutDashboard size={20} />} label="Overview" />
-          <NavItem to="/results" icon={<PenSquare size={20} />} label="Results Entry" />
+          <NavItem to="/" icon={<LayoutDashboard size={20} />} label="Baller League" />
+          <NavItem to="/matches" icon={<CalendarCheckIcon size={20} />} label="Matches" />
+          <NavItem to="/results" icon={<PenSquare size={20} />} label="Match Details" />
           <NavItem to="/standings" icon={<Trophy size={20} />} label="Standings" />
           <NavItem to="/teams" icon={<Users size={20} />} label="Teams" />
           <NavItem to="/stats" icon={<Activity size={20} />} label="Player Stats" />
           <NavItem
             to="/settings"
             icon={<Settings size={20} />}
-            label="Settings"
+            label="League Settings"
             disabled={!canAccessAdmin}
             note={!canAccessAdmin ? 'Admins only' : ''}
           />

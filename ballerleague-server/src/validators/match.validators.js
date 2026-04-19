@@ -1,5 +1,35 @@
 import { body, param, query } from 'express-validator';
 
+function hasValue(value) {
+  return typeof value !== 'undefined' && value !== null && value !== '';
+}
+
+function isValidVenuePayload(value) {
+  if (typeof value === 'undefined') {
+    return true;
+  }
+
+  if (typeof value === 'string') {
+    return true;
+  }
+
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+
+  const hasName = hasValue(value.name) ? typeof value.name === 'string' : true;
+  const hasAddress = hasValue(value.address) ? typeof value.address === 'string' : true;
+  const hasPlaceId = hasValue(value.place_id) ? typeof value.place_id === 'string' : true;
+  const hasLatitude = hasValue(value.latitude)
+    ? Number.isFinite(Number(value.latitude)) && Number(value.latitude) >= -90 && Number(value.latitude) <= 90
+    : true;
+  const hasLongitude = hasValue(value.longitude)
+    ? Number.isFinite(Number(value.longitude)) && Number(value.longitude) >= -180 && Number(value.longitude) <= 180
+    : true;
+
+  return hasName && hasAddress && hasPlaceId && hasLatitude && hasLongitude;
+}
+
 export const matchIdParamValidator = [
   param('id').isInt({ min: 1 }).withMessage('match id must be a positive integer')
 ];
@@ -12,15 +42,39 @@ export const createManualMatchValidator = [
     .custom((value, { req }) => Number(value) !== Number(req.body.home_team_id))
     .withMessage('home_team_id and away_team_id must be different'),
   body('kickoff_at').isISO8601().withMessage('kickoff_at must be a valid ISO date-time'),
-  body('venue').optional().trim(),
+  body('venue').optional().isString().trim(),
+  body('venue_details')
+    .optional()
+    .custom((value) => isValidVenuePayload(value))
+    .withMessage('venue_details must be a valid venue payload'),
   body('published').optional().isBoolean().withMessage('published must be a boolean')
 ];
 
 export const updateMatchScheduleValidator = [
   ...matchIdParamValidator,
   body('kickoff_at').optional().isISO8601().withMessage('kickoff_at must be a valid ISO date-time'),
-  body('venue').optional().trim(),
+  body('venue').optional().isString().trim(),
+  body('venue_details')
+    .optional()
+    .custom((value) => isValidVenuePayload(value))
+    .withMessage('venue_details must be a valid venue payload'),
   body('season_id').optional().isInt({ min: 1 }).withMessage('season_id must be a positive integer')
+];
+
+export const geocodeSearchValidator = [
+  query('q')
+    .trim()
+    .isLength({ min: 2, max: 200 })
+    .withMessage('q must be between 2 and 200 characters'),
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 20 })
+    .withMessage('limit must be between 1 and 20')
+];
+
+export const geocodeReverseValidator = [
+  query('lat').isFloat({ min: -90, max: 90 }).withMessage('lat must be between -90 and 90'),
+  query('lon').isFloat({ min: -180, max: 180 }).withMessage('lon must be between -180 and 180')
 ];
 
 export const updateMatchStatusValidator = [

@@ -15,11 +15,6 @@ export const loginValidator = [
   body('password').notEmpty().withMessage('password is required')
 ];
 
-export const bootstrapAdminValidator = [
-  body('email').isEmail().withMessage('email must be valid').normalizeEmail(),
-  body('bootstrapKey').notEmpty().withMessage('bootstrapKey is required')
-];
-
 export const updateOwnProfileValidator = [
   body('displayName').optional().trim().notEmpty().withMessage('displayName cannot be empty'),
   body('participantType')

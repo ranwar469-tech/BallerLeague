@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import { validateRequest } from '../../middleware/validate.js';
 import { requireAuth, requireAnyRole, signAccessToken } from '../../middleware/auth.js';
 import {
-  bootstrapAdminValidator,
   loginValidator,
   registerValidator,
   updateOwnProfileValidator,
@@ -14,7 +13,7 @@ import { User } from '../../models/user.model.js';
 
 const router = Router();
 
-function sanitizeUser(userDoc) {
+function toUser(userDoc) {
   return {
     id: userDoc._id.toString(),
     email: userDoc.email,
@@ -27,7 +26,7 @@ function sanitizeUser(userDoc) {
   };
 }
 
-function buildTokenPayload(userDoc) {
+function toTokenClaims(userDoc) {
   return {
     sub: userDoc._id.toString(),
     email: userDoc.email,
@@ -37,27 +36,18 @@ function buildTokenPayload(userDoc) {
   };
 }
 
-router.post('/bootstrap-admin', bootstrapAdminValidator, validateRequest, async (req, res) => {
-  const configuredKey = process.env.AUTH_BOOTSTRAP_KEY;
-  if (!configuredKey) {
-    return res.status(403).json({ message: 'AUTH_BOOTSTRAP_KEY is not configured on this server' });
+function getSignupRoles(body, isFirstUser) {
+  if (isFirstUser) {
+    return { roles: ['system_admin'], participantType: null };
   }
 
-  if (req.body.bootstrapKey !== configuredKey) {
-    return res.status(403).json({ message: 'Invalid bootstrap key' });
-  }
+  const requested = Array.isArray(body.roles) ? body.roles : [];
+  const allowed = requested.filter((role) => role === 'participant' || role === 'public_user');
+  const roles = allowed.length ? [...new Set(allowed)] : ['public_user'];
+  const participantType = roles.includes('participant') ? body.participantType ?? null : null;
 
-  const user = await User.findOne({ email: req.body.email });
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-
-  const nextRoles = [...new Set([...(user.roles || []), 'system_admin'])];
-  user.roles = nextRoles;
-  await user.save();
-
-  return res.json({ user: sanitizeUser(user) });
-});
+  return { roles, participantType };
+}
 
 router.post('/register', registerValidator, validateRequest, async (req, res) => {
   const existing = await User.findOne({ email: req.body.email }).select('_id');
@@ -65,31 +55,10 @@ router.post('/register', registerValidator, validateRequest, async (req, res) =>
     return res.status(409).json({ message: 'Email already registered' });
   }
 
-  const usersCount = await User.estimatedDocumentCount();
-  if (usersCount === 0) {
-    const passwordHash = await bcrypt.hash(req.body.password, 12);
-    const user = await User.create({
-      email: req.body.email,
-      displayName: req.body.displayName,
-      passwordHash,
-      roles: ['system_admin'],
-      participantType: null
-    });
+  const isFirstUser = (await User.estimatedDocumentCount()) === 0;
+  const signup = getSignupRoles(req.body, isFirstUser);
 
-    const token = signAccessToken(buildTokenPayload(user));
-    return res.status(201).json({
-      token,
-      user: sanitizeUser(user),
-      bootstrap: 'First account created as system_admin'
-    });
-  }
-
-  const requestedRoles = Array.isArray(req.body.roles) ? req.body.roles : [];
-  const roles = requestedRoles.filter((role) => role === 'participant' || role === 'public_user');
-  const finalRoles = roles.length ? [...new Set(roles)] : ['public_user'];
-  const participantType = finalRoles.includes('participant') ? req.body.participantType ?? null : null;
-
-  if (finalRoles.includes('participant') && !participantType) {
+  if (signup.roles.includes('participant') && !signup.participantType) {
     return res.status(400).json({ message: 'participantType is required when role includes participant' });
   }
 
@@ -98,12 +67,12 @@ router.post('/register', registerValidator, validateRequest, async (req, res) =>
     email: req.body.email,
     displayName: req.body.displayName,
     passwordHash,
-    roles: finalRoles,
-    participantType
+    roles: signup.roles,
+    participantType: signup.participantType
   });
 
-  const token = signAccessToken(buildTokenPayload(user));
-  return res.status(201).json({ token, user: sanitizeUser(user) });
+  const token = signAccessToken(toTokenClaims(user));
+  return res.status(201).json({ token, user: toUser(user) });
 });
 
 router.post('/login', loginValidator, validateRequest, async (req, res) => {
@@ -121,8 +90,8 @@ router.post('/login', loginValidator, validateRequest, async (req, res) => {
     return res.status(401).json({ message: 'Invalid email or password' });
   }
 
-  const token = signAccessToken(buildTokenPayload(user));
-  return res.json({ token, user: sanitizeUser(user) });
+  const token = signAccessToken(toTokenClaims(user));
+  return res.json({ token, user: toUser(user) });
 });
 
 router.get('/me', requireAuth, async (req, res) => {
@@ -131,7 +100,7 @@ router.get('/me', requireAuth, async (req, res) => {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  return res.json({ user: sanitizeUser(user) });
+  return res.json({ user: toUser(user) });
 });
 
 router.patch('/me/profile', requireAuth, updateOwnProfileValidator, validateRequest, async (req, res) => {
@@ -154,12 +123,12 @@ router.patch('/me/profile', requireAuth, updateOwnProfileValidator, validateRequ
     return res.status(404).json({ message: 'User not found' });
   }
 
-  return res.json({ user: sanitizeUser(user) });
+  return res.json({ user: toUser(user) });
 });
 
 router.get('/users', requireAuth, requireAnyRole('system_admin'), async (req, res) => {
   const users = await User.find({}, { passwordHash: 0 }).sort({ createdAt: -1 });
-  return res.json(users.map((user) => sanitizeUser(user)));
+  return res.json(users.map((user) => toUser(user)));
 });
 
 router.patch(
@@ -189,7 +158,7 @@ router.patch(
       return res.status(404).json({ message: 'User not found' });
     }
 
-    return res.json({ user: sanitizeUser(user) });
+    return res.json({ user: toUser(user) });
   }
 );
 
@@ -206,7 +175,7 @@ router.patch(
       return res.status(404).json({ message: 'User not found' });
     }
 
-    return res.json({ user: sanitizeUser(user) });
+    return res.json({ user: toUser(user) });
   }
 );
 

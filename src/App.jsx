@@ -11,12 +11,12 @@ import { Overview } from './pages/Overview';
 import { Teams } from './pages/Teams';
 import { PlayerStats } from './pages/PlayerStats';
 import { Matches } from './pages/Matches';
-import { Settings } from './pages/Settings';
+import { LeagueSettings } from './pages/Settings';
 import { SystemUsers } from './pages/SystemUsers';
 import { SystemUsersGuard } from './pages/SystemUsersGuard';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { ResultsEntry } from './pages/ResultsEntry';
+import { MatchDetails } from './pages/MatchDetails';
 import { Standings } from './pages/Standings';
 import { getStoredUser } from './lib/api';
 
@@ -37,12 +37,12 @@ function MainShell() {
         <Header />
         <Routes>
           <Route path="/" element={<Overview />} />
-          <Route path="/results" element={<ResultsEntry />} />
+          <Route path="/results" element={<MatchDetails />} />
           <Route path="/standings" element={<Standings />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/stats" element={<PlayerStats />} />
           <Route path="/matches" element={<Matches />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/settings" element={<LeagueSettings />} />
           <Route path="/admin/users" element={<SystemUsersGuard><SystemUsers /></SystemUsersGuard>} />
           <Route path="*" element={<Overview />} />
         </Routes>
