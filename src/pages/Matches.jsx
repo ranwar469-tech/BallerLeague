@@ -480,25 +480,25 @@ export function Matches() {
             <div className="space-y-3">
               {playedMatches.map((match) => (
                 <article key={`played-${match.id}`} className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
-                  <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-[auto_minmax(0,1fr)_minmax(0,1.3fr)_auto] md:items-center md:gap-4">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold md:self-start">
                       <Clock size={12} />
                       {formatDateTime(match.kickoff_at)}
                     </div>
 
-                    <div className="flex-1 grid grid-cols-3 items-center gap-4 w-full">
-                      <div className="text-right font-bold text-slate-900 dark:text-slate-100 truncate">
+                    <div className="min-w-0 grid grid-cols-3 items-center gap-4 w-full">
+                      <div className="text-right font-bold text-slate-900 dark:text-slate-100 whitespace-normal wrap-break-word">
                         {match.home_team_name}
                       </div>
                       <div className="flex justify-center">
                         <span className="px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-400 uppercase tracking-widest">vs</span>
                       </div>
-                      <div className="text-left font-bold text-slate-900 dark:text-slate-100 truncate">
+                      <div className="text-left font-bold text-slate-900 dark:text-slate-100 whitespace-normal wrap-break-word">
                         {match.away_team_name}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 md:justify-self-end md:flex-nowrap">
                       <MapPin size={14} />
                       <span>{match.venue || 'Venue TBA'}</span>
                       <button
@@ -510,7 +510,7 @@ export function Matches() {
                       </button>
                     </div>
 
-                    <span className="text-[11px] font-semibold uppercase px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <span className="text-[11px] font-semibold uppercase px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 md:justify-self-end">
                       {match.status}
                     </span>
                   </div>
@@ -546,13 +546,13 @@ export function Matches() {
                     </div>
 
                     <div className="flex-1 grid grid-cols-3 items-center gap-4 w-full">
-                      <div className="text-right font-bold text-slate-900 dark:text-slate-100 truncate">
+                      <div className="text-right font-bold text-slate-900 dark:text-slate-100 whitespace-normal wrap-break-word">
                         {match.home_team_name}
                       </div>
                       <div className="flex justify-center">
                         <span className="px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-400 uppercase tracking-widest">vs</span>
                       </div>
-                      <div className="text-left font-bold text-slate-900 dark:text-slate-100 truncate">
+                      <div className="text-left font-bold text-slate-900 dark:text-slate-100 whitespace-normal wrap-break-word">
                         {match.away_team_name}
                       </div>
                     </div>

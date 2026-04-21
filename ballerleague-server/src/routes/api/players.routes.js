@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth, requireAnyRole } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
-import { createPlayerValidator } from '../../validators/player.validators.js';
+import { createPlayerValidator, playerIdParamValidator, updatePlayerValidator } from '../../validators/player.validators.js';
 import { Player } from '../../models/player.model.js';
 
 const router = Router();
@@ -45,5 +45,70 @@ router.post('/', requireAuth, requireAnyRole('league_admin', 'system_admin'), cr
     rating: player.rating
   });
 });
+
+router.patch(
+  '/:id',
+  requireAuth,
+  requireAnyRole('league_admin', 'system_admin'),
+  updatePlayerValidator,
+  validateRequest,
+  async (req, res) => {
+    const playerId = Number(req.params.id);
+    const updates = {};
+
+    if (typeof req.body.name === 'string') {
+      updates.name = req.body.name.trim();
+    }
+
+    if (typeof req.body.position === 'string') {
+      updates.position = req.body.position.trim();
+    }
+
+    if (typeof req.body.number !== 'undefined') {
+      updates.number = Number(req.body.number);
+    }
+
+    if (typeof req.body.nationality === 'string') {
+      updates.nationality = req.body.nationality.trim();
+    }
+
+    if (typeof req.body.avatar === 'string') {
+      updates.avatar = req.body.avatar.trim();
+    }
+
+    if (typeof req.body.team_id !== 'undefined') {
+      updates.team_id = req.body.team_id === null ? null : Number(req.body.team_id);
+    }
+
+    if (typeof req.body.season_id !== 'undefined') {
+      updates.season_id = req.body.season_id === null ? null : Number(req.body.season_id);
+    }
+
+    const player = await Player.findOneAndUpdate({ id: playerId }, updates, { new: true, projection: { _id: 0 } });
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+
+    return res.json(player);
+  }
+);
+
+router.delete(
+  '/:id',
+  requireAuth,
+  requireAnyRole('league_admin', 'system_admin'),
+  playerIdParamValidator,
+  validateRequest,
+  async (req, res) => {
+    const playerId = Number(req.params.id);
+    const deleted = await Player.findOneAndDelete({ id: playerId }, { projection: { _id: 0 } });
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+
+    return res.json({ success: true });
+  }
+);
 
 export default router;

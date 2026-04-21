@@ -6,6 +6,7 @@ import {
   loginValidator,
   registerValidator,
   updateOwnProfileValidator,
+  updateUserSettingsValidator,
   updateUserRolesValidator,
   updateUserStatusValidator
 } from '../../validators/auth.validators.js';
@@ -123,6 +124,35 @@ router.patch('/me/profile', requireAuth, updateOwnProfileValidator, validateRequ
     return res.status(404).json({ message: 'User not found' });
   }
 
+  return res.json({ user: toUser(user) });
+});
+
+router.patch('/me/settings', requireAuth, updateUserSettingsValidator, validateRequest, async (req, res) => {
+  const updates = {};
+  
+  if (typeof req.body.displayName === 'string') {
+    updates.displayName = req.body.displayName.trim();
+  }
+  
+  if (req.body.email) {
+    if (req.body.email !== req.auth.email) {
+      const existing = await User.findOne({ email: req.body.email }).select('_id');
+      if (existing) {
+        return res.status(409).json({ message: 'Email already registered' });
+      }
+      updates.email = req.body.email;
+    }
+  }
+  
+  if (req.body.password) {
+    updates.passwordHash = await bcrypt.hash(req.body.password, 12);
+  }
+  
+  const user = await User.findByIdAndUpdate(req.auth.sub, updates, { new: true });
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  
   return res.json({ user: toUser(user) });
 });
 

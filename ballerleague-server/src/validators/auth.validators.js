@@ -23,6 +23,12 @@ export const updateOwnProfileValidator = [
     .withMessage('participantType must be player or coach')
 ];
 
+export const updateUserSettingsValidator = [
+  body('displayName').optional().trim().notEmpty().withMessage('displayName cannot be empty'),
+  body('email').optional().isEmail().withMessage('email must be valid').normalizeEmail(),
+  body('password').optional().isLength({ min: 8 }).withMessage('password must be at least 8 characters long')
+];
+
 export const userIdParamValidator = [
   param('id').isMongoId().withMessage('id must be a valid user id')
 ];

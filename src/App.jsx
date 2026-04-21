@@ -12,6 +12,7 @@ import { Teams } from './pages/Teams';
 import { PlayerStats } from './pages/PlayerStats';
 import { Matches } from './pages/Matches';
 import { LeagueSettings } from './pages/Settings';
+import { UserSettings } from './pages/UserSettings';
 import { SystemUsers } from './pages/SystemUsers';
 import { SystemUsersGuard } from './pages/SystemUsersGuard';
 import { Login } from './pages/Login';
@@ -43,6 +44,7 @@ function MainShell() {
           <Route path="/stats" element={<PlayerStats />} />
           <Route path="/matches" element={<Matches />} />
           <Route path="/settings" element={<LeagueSettings />} />
+          <Route path="/user-settings" element={<UserSettings />} />
           <Route path="/admin/users" element={<SystemUsersGuard><SystemUsers /></SystemUsersGuard>} />
           <Route path="*" element={<Overview />} />
         </Routes>

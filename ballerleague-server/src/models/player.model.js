@@ -56,12 +56,6 @@ const playerSchema = new mongoose.Schema(
       default: 0,
       min: 0
     },
-    rating: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 10
-    }
   },
   {
     collection: 'players',

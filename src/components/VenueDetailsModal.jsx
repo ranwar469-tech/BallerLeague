@@ -60,6 +60,11 @@ export function VenueDetailsModal({ isOpen, onClose, venue }) {
     return null;
   }
 
+  const openInGoogleMapsUrl=(lat,long)=>{
+    const url=`https://www.google.com/maps/search/?api=1&query=${lat},${long}`;
+    window.open(url,'_blank');
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm p-4 md:p-8 overflow-y-auto">
       <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl">
@@ -83,6 +88,10 @@ export function VenueDetailsModal({ isOpen, onClose, venue }) {
             {hasCoordinates ? (
               <p className="text-[11px] text-slate-500 mt-1">{latitude.toFixed(5)}, {longitude.toFixed(5)}</p>
             ) : null}
+            {hasCoordinates ? ( <button className="text-blue-500 hover:text-blue-700 text-sm mt-2" onClick={() => openInGoogleMapsUrl(latitude, longitude)}>
+              Open in Google Maps
+            </button>):null}
+            
           </div>
 
           {hasCoordinates ? (

@@ -25,26 +25,53 @@ export function Overview() {
   const [pastMatches, setPastMatches] = useState([]);
   const [upcomingMatches, setUpcomingMatches] = useState([]);
   const [seasons, setSeasons] = useState([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    async function loadSeasons() {
+      try {
+        const { data } = await api.get('/seasons');
+        const seasonRows = Array.isArray(data) ? data : [];
+        setSeasons(seasonRows);
+
+        if (seasonRows.length > 0 && !selectedSeasonId) {
+          setSelectedSeasonId(String(seasonRows[0].id));
+        } else if (seasonRows.length === 0) {
+          setTeams([]);
+          setPastMatches([]);
+          setUpcomingMatches([]);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        setErrorMessage(error.response?.data?.message || 'Failed to load dashboard data');
+        setIsLoading(false);
+      }
+    }
+
+    loadSeasons();
+  }, []);
+
+  useEffect(() => {
     async function loadOverview() {
+      if (!selectedSeasonId) {
+        return;
+      }
+
       setIsLoading(true);
       setErrorMessage('');
 
       try {
-        const [{ data: teamRows }, { data: pastRows }, { data: upcomingRows }, { data: seasonRows }] = await Promise.all([
-          api.get('/teams'),
-          api.get('/matches/past'),
-          api.get('/matches/upcoming'),
-          api.get('/seasons')
+        const [{ data: teamRows }, { data: pastRows }, { data: upcomingRows }] = await Promise.all([
+          api.get(`/seasons/${selectedSeasonId}/teams`),
+          api.get('/matches/past', { params: { season_id: Number(selectedSeasonId) } }),
+          api.get('/matches/upcoming', { params: { season_id: Number(selectedSeasonId) } })
         ]);
 
         setTeams(Array.isArray(teamRows) ? teamRows : []);
         setPastMatches(Array.isArray(pastRows) ? pastRows : []);
         setUpcomingMatches(Array.isArray(upcomingRows) ? upcomingRows : []);
-        setSeasons(Array.isArray(seasonRows) ? seasonRows : []);
       } catch (error) {
         setErrorMessage(error.response?.data?.message || 'Failed to load dashboard data');
       } finally {
@@ -53,7 +80,7 @@ export function Overview() {
     }
 
     loadOverview();
-  }, []);
+  }, [selectedSeasonId]);
 
   const completedMatches = useMemo(
     () => pastMatches.filter((match) => match.status === 'completed'),
@@ -89,7 +116,10 @@ export function Overview() {
       .slice(0, 5);
   }, [pastMatches]);
 
-  const selectedSeason = seasons.length > 0 ? seasons[0] : null;
+  const selectedSeason = useMemo(
+    () => seasons.find((season) => String(season.id) === String(selectedSeasonId)) || null,
+    [seasons, selectedSeasonId]
+  );
 
   return (
     <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-slate-950">
@@ -101,6 +131,24 @@ export function Overview() {
           <p className="text-slate-500 mt-1">
             {selectedSeason ? `${selectedSeason.league_name} • ${selectedSeason.name}` : 'Live competition snapshot'}
           </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="overview-season">
+            Season
+          </label>
+          <select
+            id="overview-season"
+            value={selectedSeasonId}
+            onChange={(event) => setSelectedSeasonId(event.target.value)}
+            className="min-w-64 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+          >
+            {seasons.map((season) => (
+              <option key={season.id} value={season.id}>
+                {season.league_name} - {season.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {errorMessage ? (

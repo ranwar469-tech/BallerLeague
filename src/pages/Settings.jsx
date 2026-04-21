@@ -583,6 +583,35 @@ function TeamsManager() {
     setAssignData({ team_id: '', season_id: '' });
   };
 
+  const handleEditTeam = async (team) => {
+    const nextName = window.prompt('Team name', team.name || '');
+    if (nextName === null) return;
+
+    const nextStadium = window.prompt('Stadium', team.stadium || '');
+    if (nextStadium === null) return;
+
+    const nextCity = window.prompt('City', team.city || '');
+    if (nextCity === null) return;
+
+    const { data: updated } = await api.patch(`/teams/${team.id}`, {
+      name: nextName,
+      stadium: nextStadium,
+      city: nextCity
+    });
+
+    setTeams((prev) => prev.map((row) => (row.id === team.id ? updated : row)));
+  };
+
+  const handleDeleteTeam = async (team) => {
+    if (!window.confirm(`Delete team "${team.name}"? This will also clear its season assignments and roster links.`)) {
+      return;
+    }
+
+    await api.delete(`/teams/${team.id}`);
+    setTeams((prev) => prev.filter((row) => row.id !== team.id));
+    await refreshSeasons();
+  };
+
   return (
     <div className="space-y-8">
       {/* Create Team */}
@@ -649,6 +678,7 @@ function TeamsManager() {
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Stadium</th>
               <th className="px-4 py-3">City</th>
+              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -657,6 +687,24 @@ function TeamsManager() {
                 <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{team.name}</td>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{team.stadium}</td>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{team.city}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEditTeam(team)}
+                      className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTeam(team)}
+                      className="rounded-lg border border-rose-300 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/20"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -711,6 +759,38 @@ function PlayersManager() {
     });
     alert('Player added to team roster successfully');
     setAssignData({ player_id: '', team_id: '', season_id: '' });
+  };
+
+  const handleEditPlayer = async (player) => {
+    const nextName = window.prompt('Player name', player.name || '');
+    if (nextName === null) return;
+
+    const nextPosition = window.prompt('Position', player.position || '');
+    if (nextPosition === null) return;
+
+    const nextNumber = window.prompt('Number', String(player.number ?? 0));
+    if (nextNumber === null) return;
+
+    const nextNationality = window.prompt('Nationality', player.nationality || '');
+    if (nextNationality === null) return;
+
+    const { data: updated } = await api.patch(`/players/${player.id}`, {
+      name: nextName,
+      position: nextPosition,
+      number: Number(nextNumber || 0),
+      nationality: nextNationality
+    });
+
+    setPlayers((prev) => prev.map((row) => (row.id === player.id ? updated : row)));
+  };
+
+  const handleDeletePlayer = async (player) => {
+    if (!window.confirm(`Delete player "${player.name}"? This cannot be undone.`)) {
+      return;
+    }
+
+    await api.delete(`/players/${player.id}`);
+    setPlayers((prev) => prev.filter((row) => row.id !== player.id));
   };
 
   return (
@@ -796,6 +876,7 @@ function PlayersManager() {
               <th className="px-4 py-3">Position</th>
               <th className="px-4 py-3">Number</th>
               <th className="px-4 py-3">Nationality</th>
+              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -805,6 +886,24 @@ function PlayersManager() {
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{player.position}</td>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{player.number}</td>
                 <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{player.nationality}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEditPlayer(player)}
+                      className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePlayer(player)}
+                      className="rounded-lg border border-rose-300 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/20"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

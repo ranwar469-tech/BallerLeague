@@ -65,7 +65,7 @@ export function Header() {
             <Trophy size={20} />
           </div>
           <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight hidden md:block">
-            Baller League
+            Baller League - Local Sports League Manager
           </h2>
         </div>
         
@@ -122,6 +122,13 @@ export function Header() {
                       <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{displayName}</p>
                       <p className="text-xs text-slate-500 truncate">{currentUser.email}</p>
                     </div>
+                    <NavLink
+                      to="/user-settings"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="block rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    >
+                      User Settings
+                    </NavLink>
                     {canAccessAdmin ? (
                       <NavLink
                         to="/settings"
