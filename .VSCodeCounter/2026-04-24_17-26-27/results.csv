@@ -1,0 +1,73 @@
+"filename", "language", "JSON", "HTML", "JavaScript", "JavaScript JSX", "PostCSS", "Markdown", "comment", "blank", "total"
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\README.md", "Markdown", 0, 0, 0, 0, 0, 88, 0, 32, 120
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\package-lock.json", "JSON", 1632, 0, 0, 0, 0, 0, 0, 1, 1633
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\package.json", "JSON", 21, 0, 0, 0, 0, 0, 0, 1, 22
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\app.js", "JavaScript", 0, 0, 11, 0, 0, 0, 0, 5, 16
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\config\mongodb.js", "JavaScript", 0, 0, 11, 0, 0, 0, 0, 4, 15
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\data\store.js", "JavaScript", 0, 0, 32, 0, 0, 0, 0, 3, 35
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\middleware\auth.js", "JavaScript", 0, 0, 41, 0, 0, 0, 0, 12, 53
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\middleware\validate.js", "JavaScript", 0, 0, 11, 0, 0, 0, 0, 4, 15
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\models\email-subscription.model.js", "JavaScript", 0, 0, 28, 0, 0, 0, 0, 3, 31
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\models\league.model.js", "JavaScript", 0, 0, 32, 0, 0, 0, 0, 3, 35
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\models\match.model.js", "JavaScript", 0, 0, 146, 0, 0, 0, 0, 6, 152
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\models\player.model.js", "JavaScript", 0, 0, 65, 0, 0, 0, 0, 3, 68
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\models\season-team.model.js", "JavaScript", 0, 0, 22, 0, 0, 0, 0, 4, 26
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\models\season.model.js", "JavaScript", 0, 0, 37, 0, 0, 0, 0, 3, 40
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\models\team.model.js", "JavaScript", 0, 0, 37, 0, 0, 0, 0, 3, 40
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\models\user.model.js", "JavaScript", 0, 0, 47, 0, 0, 0, 0, 4, 51
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\auth.routes.js", "JavaScript", 0, 0, 173, 0, 0, 0, 0, 40, 213
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\email-subscriptions.routes.js", "JavaScript", 0, 0, 32, 0, 0, 0, 0, 8, 40
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\index.js", "JavaScript", 0, 0, 17, 0, 0, 0, 0, 4, 21
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\leagues.routes.js", "JavaScript", 0, 0, 27, 0, 0, 0, 0, 7, 34
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\matches.routes.js", "JavaScript", 0, 0, 9, 0, 0, 0, 0, 4, 13
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\matches\fixtures.routes.js", "JavaScript", 0, 0, 410, 0, 0, 0, 0, 76, 486
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\matches\geocode.routes.js", "JavaScript", 0, 0, 103, 0, 0, 0, 0, 16, 119
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\matches\shared.js", "JavaScript", 0, 0, 203, 0, 0, 0, 0, 42, 245
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\matches\stats.routes.js", "JavaScript", 0, 0, 105, 0, 0, 0, 0, 17, 122
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\players.routes.js", "JavaScript", 0, 0, 95, 0, 0, 0, 0, 20, 115
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\seasons.routes.js", "JavaScript", 0, 0, 104, 0, 0, 0, 0, 23, 127
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\routes\api\teams.routes.js", "JavaScript", 0, 0, 148, 0, 0, 0, 0, 32, 180
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\server.js", "JavaScript", 0, 0, 31, 0, 0, 0, 0, 6, 37
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\services\email-notifications.service.js", "JavaScript", 0, 0, 108, 0, 0, 0, 1, 20, 129
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\validators\auth.validators.js", "JavaScript", 0, 0, 42, 0, 0, 0, 0, 8, 50
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\validators\league.validators.js", "JavaScript", 0, 0, 6, 0, 0, 0, 0, 2, 8
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\validators\match.validators.js", "JavaScript", 0, 0, 3, 0, 0, 0, 0, 1, 4
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\validators\match\common.validators.js", "JavaScript", 0, 0, 89, 0, 0, 0, 0, 16, 105
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\validators\match\geocode.validators.js", "JavaScript", 0, 0, 15, 0, 0, 0, 0, 3, 18
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\validators\match\query.validators.js", "JavaScript", 0, 0, 8, 0, 0, 0, 0, 3, 11
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\validators\player.validators.js", "JavaScript", 0, 0, 30, 0, 0, 0, 0, 4, 34
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\validators\season.validators.js", "JavaScript", 0, 0, 11, 0, 0, 0, 0, 3, 14
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\ballerleague-server\src\validators\team.validators.js", "JavaScript", 0, 0, 26, 0, 0, 0, 0, 6, 32
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\index.html", "HTML", 0, 12, 0, 0, 0, 0, 0, 2, 14
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\metadata.json", "JSON", 5, 0, 0, 0, 0, 0, 0, 1, 6
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\package-lock.json", "JSON", 5049, 0, 0, 0, 0, 0, 0, 1, 5050
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\package.json", "JSON", 47, 0, 0, 0, 0, 0, 0, 1, 48
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\App.jsx", "JavaScript JSX", 0, 0, 0, 57, 0, 0, 4, 6, 67
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\components\EmailSubscriptions.jsx", "JavaScript JSX", 0, 0, 0, 64, 0, 0, 0, 10, 74
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\components\Header.jsx", "JavaScript JSX", 0, 0, 0, 175, 0, 0, 0, 17, 192
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\components\MatchEntryCard.jsx", "JavaScript JSX", 0, 0, 0, 407, 0, 0, 3, 50, 460
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\components\PerformanceTrendCard.jsx", "JavaScript JSX", 0, 0, 0, 73, 0, 0, 0, 11, 84
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\components\Sidebar.jsx", "JavaScript JSX", 0, 0, 0, 85, 0, 0, 0, 7, 92
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\components\StandingsCard.jsx", "JavaScript JSX", 0, 0, 0, 81, 0, 0, 0, 8, 89
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\components\VenueDetailsModal.jsx", "JavaScript JSX", 0, 0, 0, 303, 0, 0, 0, 41, 344
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\components\VenuePickerModal.jsx", "JavaScript JSX", 0, 0, 0, 240, 0, 0, 0, 40, 280
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\index.css", "PostCSS", 0, 0, 0, 0, 6, 0, 0, 2, 8
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\lib\api.js", "JavaScript", 0, 0, 42, 0, 0, 0, 0, 13, 55
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\lib\auth.js", "JavaScript", 0, 0, 12, 0, 0, 0, 0, 5, 17
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\lib\date.js", "JavaScript", 0, 0, 36, 0, 0, 0, 0, 8, 44
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\main.jsx", "JavaScript JSX", 0, 0, 0, 10, 0, 0, 0, 2, 12
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\Login.jsx", "JavaScript JSX", 0, 0, 0, 88, 0, 0, 0, 12, 100
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\MatchDetails.jsx", "JavaScript JSX", 0, 0, 0, 18, 0, 0, 0, 3, 21
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\Matches.jsx", "JavaScript JSX", 0, 0, 0, 525, 0, 0, 0, 63, 588
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\Overview.jsx", "JavaScript JSX", 0, 0, 0, 324, 0, 0, 0, 26, 350
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\PlayerStats.jsx", "JavaScript JSX", 0, 0, 0, 115, 0, 0, 2, 15, 132
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\Register.jsx", "JavaScript JSX", 0, 0, 0, 140, 0, 0, 0, 16, 156
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\ResultsAnalytics.jsx", "JavaScript JSX", 0, 0, 0, 32, 0, 0, 3, 5, 40
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\Settings.jsx", "JavaScript JSX", 0, 0, 0, 817, 0, 0, 7, 92, 916
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\Standings.jsx", "JavaScript JSX", 0, 0, 0, 62, 0, 0, 0, 10, 72
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\SystemUsers.jsx", "JavaScript JSX", 0, 0, 0, 239, 0, 0, 0, 28, 267
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\SystemUsersGuard.jsx", "JavaScript JSX", 0, 0, 0, 10, 0, 0, 0, 4, 14
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\Teams.jsx", "JavaScript JSX", 0, 0, 0, 254, 0, 0, 0, 24, 278
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\src\pages\UserSettings.jsx", "JavaScript JSX", 0, 0, 0, 142, 0, 0, 0, 16, 158
+"c:\Users\ranwa\Desktop\Uni\FINAL\cloud\BallerLeague\vite.config.js", "JavaScript", 0, 0, 30, 0, 0, 0, 0, 3, 33
+"Total", "-", 6754, 12, 2435, 4261, 6, 88, 20, 994, 14570
