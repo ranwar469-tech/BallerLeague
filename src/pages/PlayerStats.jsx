@@ -5,14 +5,91 @@ import api from '../lib/api';
 export function PlayerStats() {
   const [players, setPlayers] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: 'goals', direction: 'desc' });
+  const [leagues, setLeagues] = useState([]);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedLeagueId, setSelectedLeagueId] = useState('');
+  const [selectedSeasonId, setSelectedSeasonId] = useState('');
 
   useEffect(() => {
-    api.get('/matches/player-stats')
-      .then(({ data }) => data)
-      .then(data => {
-        setPlayers(Array.isArray(data) ? data : []);
-      });
+    Promise.all([
+      api.get('/leagues').catch(() => ({ data: [] })),
+      api.get('/seasons').catch(() => ({ data: [] }))
+    ]).then(([leaguesRes, seasonsRes]) => {
+      setLeagues(Array.isArray(leaguesRes.data) ? leaguesRes.data : []);
+      setSeasons(Array.isArray(seasonsRes.data) ? seasonsRes.data : []);
+    });
   }, []);
+
+  useEffect(() => {
+    async function loadPlayerStats() {
+      try {
+        if (selectedSeasonId) {
+          const { data } = await api.get('/matches/player-stats', {
+            params: { season_id: selectedSeasonId }
+          });
+          setPlayers(Array.isArray(data) ? data : []);
+          return;
+        }
+
+        if (!selectedLeagueId) {
+          const { data } = await api.get('/matches/player-stats');
+          setPlayers(Array.isArray(data) ? data : []);
+          return;
+        }
+
+        const leagueSeasonIds = seasons
+          .filter((season) => String(season.league_id) === String(selectedLeagueId))
+          .map((season) => season.id);
+
+        if (leagueSeasonIds.length === 0) {
+          setPlayers([]);
+          return;
+        }
+
+        const responses = await Promise.all(
+          leagueSeasonIds.map((seasonId) =>
+            api.get('/matches/player-stats', { params: { season_id: seasonId } }).catch(() => ({ data: [] }))
+          )
+        );
+
+        const mergedMap = new Map();
+        responses
+          .flatMap((response) => (Array.isArray(response.data) ? response.data : []))
+          .forEach((player) => {
+            const key = String(player.id ?? `${player.name || 'unknown'}-${player.position || 'NA'}`);
+            const current = mergedMap.get(key);
+
+            if (!current) {
+              mergedMap.set(key, {
+                ...player,
+                apps: Number(player.apps || 0),
+                goals: Number(player.goals || 0),
+                assists: Number(player.assists || 0)
+              });
+              return;
+            }
+
+            mergedMap.set(key, {
+              ...current,
+              apps: Number(current.apps || 0) + Number(player.apps || 0),
+              goals: Number(current.goals || 0) + Number(player.goals || 0),
+              assists: Number(current.assists || 0) + Number(player.assists || 0)
+            });
+          });
+
+        setPlayers(Array.from(mergedMap.values()));
+      } catch {
+        setPlayers([]);
+      }
+    }
+
+    loadPlayerStats();
+  }, [selectedLeagueId, selectedSeasonId, seasons]);
+
+  const filteredSeasons = useMemo(() => {
+    if (!selectedLeagueId) return seasons;
+    return seasons.filter((s) => String(s.league_id) === String(selectedLeagueId));
+  }, [seasons, selectedLeagueId]);
 
   const sortedPlayers = useMemo(() => {
     const rows = [...players];
@@ -60,11 +137,44 @@ export function PlayerStats() {
   return (
     <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-slate-950">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-            Player Statistics
-          </h1>
-          <p className="text-slate-500 mt-1">Top scorers and assist leaders across the league</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+              Player Statistics
+            </h1>
+            <p className="text-slate-500 mt-1">Top scorers and assist leaders across the league</p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <select
+              value={selectedLeagueId}
+              onChange={(event) => {
+                setSelectedLeagueId(event.target.value);
+                setSelectedSeasonId('');
+              }}
+              className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm min-w-40"
+            >
+              <option value="">All Leagues</option>
+              {leagues.map((league) => (
+                <option key={league.id} value={league.id}>
+                  {league.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedSeasonId}
+              onChange={(event) => setSelectedSeasonId(event.target.value)}
+              className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm min-w-40"
+            >
+              <option value="">All Seasons</option>
+              {filteredSeasons.map((season) => (
+                <option key={season.id} value={season.id}>
+                  {selectedLeagueId ? season.name : `${season.league_name} - ${season.name}`}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Stats Table */}

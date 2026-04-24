@@ -1,10 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { MapPin, Users, X } from 'lucide-react';
 import api from '../lib/api';
 import { getCurrentUser, hasAnyRole } from '../lib/auth';
 
 export function Teams() {
+  const [allTeams, setAllTeams] = useState([]);
   const [teams, setTeams] = useState([]);
+  const [leagues, setLeagues] = useState([]);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedLeagueId, setSelectedLeagueId] = useState('');
+  const [selectedSeasonId, setSelectedSeasonId] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -16,10 +21,71 @@ export function Teams() {
   const canManageTeams = hasAnyRole(getCurrentUser(), ['league_admin', 'system_admin']);
 
   useEffect(() => {
-    api.get('/teams')
-      .then(({ data }) => data)
-      .then(setTeams);
+    Promise.all([
+      api.get('/teams').catch(() => ({ data: [] })),
+      api.get('/leagues').catch(() => ({ data: [] })),
+      api.get('/seasons').catch(() => ({ data: [] }))
+    ]).then(([teamsRes, leaguesRes, seasonsRes]) => {
+      const teamRows = Array.isArray(teamsRes.data) ? teamsRes.data : [];
+      setAllTeams(teamRows);
+      setTeams(teamRows);
+      setLeagues(Array.isArray(leaguesRes.data) ? leaguesRes.data : []);
+      setSeasons(Array.isArray(seasonsRes.data) ? seasonsRes.data : []);
+    });
   }, []);
+
+  useEffect(() => {
+    async function loadTeamsForSelection() {
+      if (!selectedSeasonId && !selectedLeagueId) {
+        setTeams(allTeams);
+        return;
+      }
+
+      try {
+        if (selectedSeasonId) {
+          const { data } = await api.get(`/seasons/${selectedSeasonId}/teams`);
+          setTeams(Array.isArray(data) ? data : []);
+          return;
+        }
+
+        const leagueSeasonIds = seasons
+          .filter((season) => String(season.league_id) === String(selectedLeagueId))
+          .map((season) => season.id);
+
+        if (leagueSeasonIds.length === 0) {
+          setTeams([]);
+          return;
+        }
+
+        const responses = await Promise.all(
+          leagueSeasonIds.map((seasonId) => api.get(`/seasons/${seasonId}/teams`).catch(() => ({ data: [] })))
+        );
+
+        const allowedIds = new Set(
+          responses
+            .flatMap((response) => (Array.isArray(response.data) ? response.data : []))
+            .map((team) => Number(team.id))
+        );
+
+        setTeams(allTeams.filter((team) => allowedIds.has(Number(team.id))));
+      } catch {
+        setTeams([]);
+      }
+    }
+
+    loadTeamsForSelection();
+  }, [allTeams, seasons, selectedLeagueId, selectedSeasonId]);
+
+  const filteredSeasons = useMemo(() => {
+    if (!selectedLeagueId) return seasons;
+    return seasons.filter((s) => String(s.league_id) === String(selectedLeagueId));
+  }, [seasons, selectedLeagueId]);
+
+  useEffect(() => {
+    if (selectedTeam && !teams.some((team) => String(team.id) === String(selectedTeam.id))) {
+      closeTeamModal();
+    }
+  }, [selectedTeam, teams]);
 
   async function handleCreateTeam(event) {
     event.preventDefault();
@@ -69,8 +135,9 @@ export function Teams() {
   return (
     <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-slate-950">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex justify-between items-end">
-          <div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+          <div className="space-y-3">
+            <div>
             <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
               Teams
             </h1>
@@ -78,6 +145,38 @@ export function Teams() {
             {!canManageTeams ? (
               <p className="text-[11px] text-slate-500 mt-2">Only league admins or system admins can use management actions.</p>
             ) : null}
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <select
+                value={selectedLeagueId}
+                onChange={(event) => {
+                  setSelectedLeagueId(event.target.value);
+                  setSelectedSeasonId('');
+                }}
+                className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm min-w-44"
+              >
+                <option value="">All Leagues</option>
+                {leagues.map((league) => (
+                  <option key={league.id} value={league.id}>
+                    {league.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedSeasonId}
+                onChange={(event) => setSelectedSeasonId(event.target.value)}
+                className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm min-w-44"
+              >
+                <option value="">All Seasons</option>
+                {filteredSeasons.map((season) => (
+                  <option key={season.id} value={season.id}>
+                    {selectedLeagueId ? season.name : `${season.league_name} - ${season.name}`}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <button
             type="button"
