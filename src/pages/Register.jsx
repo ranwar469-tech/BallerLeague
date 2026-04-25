@@ -9,7 +9,6 @@ export function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [roleType, setRoleType] = useState('public_user');
-  const [participantType, setParticipantType] = useState('player');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -25,10 +24,6 @@ export function Register() {
         password,
         roles: [roleType]
       };
-
-      if (roleType === 'participant') {
-        payload.participantType = participantType;
-      }
 
       const { data } = await api.post('/auth/register', payload);
       setAuthSession(data.token, data.user);
@@ -107,26 +102,8 @@ export function Register() {
               className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="public_user">Public User (Fan/Viewer)</option>
-              <option value="participant">Participant</option>
             </select>
           </div>
-
-          {roleType === 'participant' ? (
-            <div>
-              <label htmlFor="register-participant-type" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Participant Type
-              </label>
-              <select
-                id="register-participant-type"
-                value={participantType}
-                onChange={(event) => setParticipantType(event.target.value)}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="player">Player</option>
-                <option value="coach">Coach</option>
-              </select>
-            </div>
-          ) : null}
 
           {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
 

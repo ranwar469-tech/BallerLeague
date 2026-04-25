@@ -5,7 +5,6 @@ import { getCurrentUser, hasAnyRole } from '../lib/auth';
 
 const ROLE_OPTIONS = [
   { value: 'public_user', label: 'Public User' },
-  { value: 'participant', label: 'Participant' },
   { value: 'league_admin', label: 'League Admin' },
   { value: 'system_admin', label: 'System Admin' }
 ];
@@ -45,8 +44,7 @@ export function SystemUsers() {
       const nextEditingState = {};
       for (const user of rows) {
         nextEditingState[user.id] = {
-          roles: rolesToState(user.roles),
-          participantType: user.participantType || 'player'
+          roles: rolesToState(user.roles)
         };
       }
       setEditingState(nextEditingState);
@@ -79,19 +77,13 @@ export function SystemUsers() {
       return;
     }
 
-    if (roles.includes('participant') && !state.participantType) {
-      setErrorMessage('Participant type is required when participant role is selected.');
-      return;
-    }
-
     setSavingUserId(user.id);
     setErrorMessage('');
     setSuccessMessage('');
 
     try {
       await api.patch(`/auth/users/${user.id}/roles`, {
-        roles,
-        participantType: roles.includes('participant') ? state.participantType : null
+        roles
       });
 
       setSuccessMessage(`Updated ${user.displayName}`);
@@ -165,8 +157,7 @@ export function SystemUsers() {
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {users.map((user) => {
-                const state = editingState[user.id] || { roles: rolesToState(user.roles), participantType: user.participantType || 'player' };
-                const selectedRoles = stateToRoles(state.roles);
+                const state = editingState[user.id] || { roles: rolesToState(user.roles) };
                 const isSaving = savingUserId === user.id;
 
                 return (
@@ -202,7 +193,7 @@ export function SystemUsers() {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                       <label className="space-y-2">
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Roles</span>
                         <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-3">
@@ -226,25 +217,6 @@ export function SystemUsers() {
                             </label>
                           ))}
                         </div>
-                      </label>
-
-                      <label className="space-y-2">
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Participant Type</span>
-                        <select
-                          value={state.participantType}
-                          onChange={(event) => setEditingState((prev) => ({
-                            ...prev,
-                            [user.id]: {
-                              ...prev[user.id],
-                              participantType: event.target.value
-                            }
-                          }))}
-                          disabled={!selectedRoles.includes('participant')}
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <option value="player">Player</option>
-                          <option value="coach">Coach</option>
-                        </select>
                       </label>
 
                       <div className="space-y-2">
