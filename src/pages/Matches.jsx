@@ -69,7 +69,7 @@ export function Matches() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isAdminControlsOpen, setIsAdminControlsOpen] = useState(true);
+  const [isAdminControlsOpen, setIsAdminControlsOpen] = useState(() => isAdminUser(getCurrentUser()));
   const [isAdminManagementOpen, setIsAdminManagementOpen] = useState(false);
   const [isVenuePickerOpen, setIsVenuePickerOpen] = useState(false);
   const [venuePickerTarget, setVenuePickerTarget] = useState({ type: 'create', match: null });

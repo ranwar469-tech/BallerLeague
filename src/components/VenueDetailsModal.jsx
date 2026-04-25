@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { MapPin, X } from 'lucide-react';
+import { CloudRain, CloudSun, MapPin, Wind, X } from 'lucide-react';
 import ReactWeather from 'react-open-weather';
 
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
@@ -60,6 +60,72 @@ function weatherDescriptionForCode(code) {
   if ([95, 96, 99].includes(numeric)) return 'Thunderstorm';
 
   return 'Weather update';
+}
+
+function getConditionStatus(code) {
+  const numeric = Number(code);
+
+  if ([0, 1, 2, 3].includes(numeric)) {
+    return { label: 'Good', tone: 'good' };
+  }
+
+  if ([45, 48, 51, 53, 55, 56, 57, 61, 63].includes(numeric)) {
+    return { label: 'Moderate', tone: 'moderate' };
+  }
+
+  if ([65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99].includes(numeric)) {
+    return { label: 'Bad', tone: 'bad' };
+  }
+
+  return { label: 'Moderate', tone: 'moderate' };
+}
+
+function getPrecipitationStatus(probability) {
+  const value = Number(probability);
+
+  if (!Number.isFinite(value)) {
+    return { label: 'Moderate', tone: 'moderate' };
+  }
+
+  if (value <= 25) {
+    return { label: 'Good', tone: 'good' };
+  }
+
+  if (value <= 55) {
+    return { label: 'Moderate', tone: 'moderate' };
+  }
+
+  return { label: 'Bad', tone: 'bad' };
+}
+
+function getWindStatus(speed) {
+  const value = Number(speed);
+
+  if (!Number.isFinite(value)) {
+    return { label: 'Moderate', tone: 'moderate' };
+  }
+
+  if (value < 20) {
+    return { label: 'Good', tone: 'good' };
+  }
+
+  if (value < 35) {
+    return { label: 'Moderate', tone: 'moderate' };
+  }
+
+  return { label: 'Bad', tone: 'bad' };
+}
+
+function getStatusToneClass(tone) {
+  if (tone === 'good') {
+    return 'text-emerald-600 dark:text-emerald-400';
+  }
+
+  if (tone === 'bad') {
+    return 'text-rose-600 dark:text-rose-400';
+  }
+
+  return 'text-amber-500 dark:text-amber-300';
 }
 
 export function VenueDetailsModal({ isOpen, onClose, venue }) {
@@ -162,7 +228,7 @@ export function VenueDetailsModal({ isOpen, onClose, venue }) {
           timezone: 'auto',
           start_date: weatherEligibility.startDate,
           end_date: weatherEligibility.endDate,
-          daily: 'weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,relative_humidity_2m_mean'
+          daily: 'weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,relative_humidity_2m_mean,precipitation_probability_max'
         });
 
         const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
@@ -181,6 +247,7 @@ export function VenueDetailsModal({ isOpen, onClose, venue }) {
         const minTemp = Number(daily.temperature_2m_min?.[0]);
         const wind = Number(daily.wind_speed_10m_max?.[0]);
         const humidity = Number(daily.relative_humidity_2m_mean?.[0]);
+        const precipitationProbability = Number(daily.precipitation_probability_max?.[0]);
 
         const formattedData = {
           current: {
@@ -195,6 +262,26 @@ export function VenueDetailsModal({ isOpen, onClose, venue }) {
             wind: Number.isFinite(wind) ? Math.round(wind) : 0,
             humidity: Number.isFinite(humidity) ? Math.round(humidity) : 0
           },
+          playability: [
+            {
+              key: 'condition',
+              title: 'Condition',
+              value: weatherDescriptionForCode(weatherCode),
+              ...getConditionStatus(weatherCode)
+            },
+            {
+              key: 'rain',
+              title: 'Rain Risk',
+              value: Number.isFinite(precipitationProbability) ? `${Math.round(precipitationProbability)}%` : '--',
+              ...getPrecipitationStatus(precipitationProbability)
+            },
+            {
+              key: 'wind',
+              title: 'Wind',
+              value: Number.isFinite(wind) ? `${Math.round(wind)} km/h` : '--',
+              ...getWindStatus(wind)
+            }
+          ],
           forecast: []
         };
 
@@ -266,17 +353,49 @@ export function VenueDetailsModal({ isOpen, onClose, venue }) {
             ) : weatherState.isLoading ? (
               <p className="text-sm text-slate-500 mt-2">Loading weather...</p>
             ) : weatherState.data ? (
-              <div className="mt-2 max-w-sm weather-compact">
-                <ReactWeather
-                  data={weatherState.data}
-                  isLoading={false}
-                  errorMessage={null}
-                  lang="en"
-                  locationLabel={venue?.name || 'Match Venue'}
-                  unitsLabels={{ temperature: 'C', windSpeed: 'km/h' }}
-                  showForecast={false}
-                  theme={WEATHER_THEME}
-                />
+              <div className="mt-2 weather-compact">
+                <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
+                  <div className="max-w-sm flex-1">
+                    <ReactWeather
+                      data={weatherState.data}
+                      isLoading={false}
+                      errorMessage={null}
+                      lang="en"
+                      locationLabel={venue?.name || 'Match Venue'}
+                      unitsLabels={{ temperature: 'C', windSpeed: 'km/h' }}
+                      showForecast={false}
+                      theme={WEATHER_THEME}
+                    />
+                  </div>
+
+                  <div className="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-1">
+                    <p className="px-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
+                      Match Playability Conditions On Scheduled Date
+                    </p>
+                    <div className="grid grid-cols-3 gap-1 px-1 pb-1 pt-2">
+                      {weatherState.data.playability?.map((item) => {
+                        const Icon = item.key === 'condition' ? CloudSun : item.key === 'rain' ? CloudRain : Wind;
+
+                        return (
+                          <div key={item.key} className="flex flex-col items-center gap-3 rounded-md px-1 py-2 text-center">
+                            <div className="flex flex-col items-center gap-1">
+                              <Icon size={18} className="text-slate-600 dark:text-slate-300" />
+                              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-[0.08em]">
+                                {item.title}
+                              </span>
+                            </div>
+                            <div className="flex flex-col items-center gap-1">
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400">{item.value}</span>
+                              <span className={`text-sm font-semibold ${getStatusToneClass(item.tone)}`}>
+                                {item.label}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <p className="text-sm text-slate-500 mt-2">Weather not available</p>
