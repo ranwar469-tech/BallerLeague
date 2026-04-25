@@ -158,8 +158,7 @@ export function Matches() {
         away_team_id: Number(createForm.away_team_id),
         kickoff_at: new Date(kickoffAtLocal).toISOString(),
         venue: createForm.venue,
-        venue_details: createForm.venue_details,
-        published: true
+        venue_details: createForm.venue_details
       });
 
       setCreateForm({

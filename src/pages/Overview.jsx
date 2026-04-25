@@ -188,7 +188,7 @@ export function Overview() {
             icon={<Trophy className="text-purple-600" size={24} />}
             trend={isLoading ? '...' : `${teams.length > 0 ? (upcomingMatches.length / teams.length).toFixed(1) : '0.0'} per team`} 
             trendUp={upcomingMatches.length > 0}
-            label="published"
+            label="scheduled"
           />
         </div>
 
@@ -252,7 +252,7 @@ export function Overview() {
             <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-6">Upcoming Matches</h3>
             <div className="space-y-6">
               {upcomingMatches.length === 0 ? (
-                <p className="text-sm text-slate-500">No upcoming fixtures published yet.</p>
+                <p className="text-sm text-slate-500">No upcoming fixtures yet.</p>
               ) : upcomingMatches.slice(0, 5).map((match) => (
                 <div key={match.id} className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
                   <div className="flex flex-col items-center min-w-15 bg-slate-50 dark:bg-slate-800 rounded-lg p-2">
