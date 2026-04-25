@@ -38,8 +38,24 @@ export function getStoredUser() {
   }
 }
 
+function getApiBaseUrl() {
+  const configuredBaseUrl = import.meta.env.VITE_API_URL;
+
+  if (configuredBaseUrl && configuredBaseUrl.trim()) {
+    return configuredBaseUrl.replace(/\/$/, '');
+  }
+
+  // Keep Vite proxy behavior in local development.
+  if (import.meta.env.DEV) {
+    return '/api';
+  }
+
+  // Safe production fallback when env vars are not configured.
+  return 'https://ballerleague-server.onrender.com/api';
+}
+
 const api = axios.create({
-  baseURL: '/api'
+  baseURL: getApiBaseUrl(),
 });
 
 api.interceptors.request.use((config) => {
