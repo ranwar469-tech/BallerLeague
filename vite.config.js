@@ -21,12 +21,6 @@ export default defineConfig(({mode}) => {
     },
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
-      proxy: {
-        '/api': {
-          target: 'https://ballerleague-server.onrender.com' /*'http://localhost:5000'*/,
-          changeOrigin: true,
-        },
-      },
     },
   };
 });
